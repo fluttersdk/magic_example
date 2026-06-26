@@ -4,6 +4,7 @@
 // Source: *.preview.dart files discovered under the scan dir.
 
 import 'package:magic_devtools/preview.dart';
+import 'bottom_menu.preview.dart';
 import 'components.preview.dart';
 import 'dashboard_screen.preview.dart';
 import 'foundations.preview.dart';
@@ -11,10 +12,16 @@ import 'login_screen.preview.dart';
 import 'profile_screen.preview.dart';
 import 'register_screen.preview.dart';
 import 'settings_screen.preview.dart';
+import 'sidebar_menu.preview.dart';
 import 'teams_screen.preview.dart';
 
 List<PreviewEntry> previewEntries() {
   return <PreviewEntry>[
+    PreviewEntry(
+      label: 'BottomMenu',
+      slug: 'bottom_menu',
+      builder: (_) => const BottomMenuPreview(),
+    ),
     PreviewEntry(
       label: 'Components',
       slug: 'components',
@@ -49,6 +56,11 @@ List<PreviewEntry> previewEntries() {
       label: 'SettingsScreen',
       slug: 'settings_screen',
       builder: (_) => const SettingsScreenPreview(),
+    ),
+    PreviewEntry(
+      label: 'SidebarMenu',
+      slug: 'sidebar_menu',
+      builder: (_) => const SidebarMenuPreview(),
     ),
     PreviewEntry(
       label: 'TeamsScreen',

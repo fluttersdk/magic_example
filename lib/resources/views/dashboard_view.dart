@@ -128,9 +128,12 @@ class DashboardView extends StatelessWidget {
                 className: 'p-2 rounded-lg bg-primary-container',
                 child: WIcon(icon, className: 'text-lg text-fg'),
               ),
+              // flex-1 so the title takes the remaining row width and fits
+              // (or wraps) instead of overflowing when the card is narrow,
+              // e.g. inside the 3-column grid beside the app-shell sidebar.
               WText(
                 title,
-                className: 'text-base font-semibold text-fg',
+                className: 'flex-1 text-base font-semibold text-fg',
               ),
             ],
           ),
