@@ -26,6 +26,7 @@ class RouteServiceProvider extends ServiceProvider {
     registerMagicStarterAuthRoutes();
     registerMagicStarterProfileRoutes();
     registerMagicStarterTeamRoutes();
+    registerMagicStarterNotificationRoutes();
     registerAppRoutes();
 
     // Dev-only component preview catalog. Registered here, in boot(), so it
