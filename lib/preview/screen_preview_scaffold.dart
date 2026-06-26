@@ -116,9 +116,11 @@ class _ScreenPreviewScaffoldState extends State<ScreenPreviewScaffold> {
           ),
         );
       case PreviewChrome.none:
-        // Bare content at the catalog pane's natural width; a vertical scroll
-        // keeps a tall screen reachable.
-        return SingleChildScrollView(child: view);
+        // Bare content at the catalog pane's natural width. No inner scroll
+        // view: the catalog page already scrolls vertically, and nesting a
+        // second vertical SingleChildScrollView here breaks the outer scroll
+        // geometry (and sidebar scroll-to-section).
+        return view;
     }
   }
 
