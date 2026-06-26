@@ -131,16 +131,10 @@ class DashboardView extends StatelessWidget {
               // flex-1 so the title takes the remaining row width and fits
               // (or wraps) instead of overflowing when the card is narrow,
               // e.g. inside the 3-column grid beside the app-shell sidebar.
-              WText(
-                title,
-                className: 'flex-1 text-base font-semibold text-fg',
-              ),
+              WText(title, className: 'flex-1 text-base font-semibold text-fg'),
             ],
           ),
-          WText(
-            description,
-            className: 'text-sm text-fg-muted mb-3',
-          ),
+          WText(description, className: 'text-sm text-fg-muted mb-3'),
           WAnchor(
             onTap: () => Launch.url(url),
             child: WDiv(

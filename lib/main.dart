@@ -52,10 +52,7 @@ void main() async {
   }
   // Theme generated from DESIGN.md via `design:sync`. Regenerate with:
   //   dart run magic_example:artisan design:sync
-  final windTheme = WindThemeData(
-    colors: designColors,
-    aliases: designAliases,
-  );
+  final windTheme = WindThemeData(colors: designColors, aliases: designAliases);
 
   runApp(MagicApplication(title: 'Magic Example', windTheme: windTheme));
 }

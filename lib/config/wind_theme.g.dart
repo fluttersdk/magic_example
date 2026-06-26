@@ -33,20 +33,17 @@ const Map<String, String> designAliases = <String, String>{
 ///
 /// Seeded from the DESIGN.md `primary` light hex; consumed by
 /// `WindThemeData.toThemeData()` Material interop.
-final Map<String, MaterialColor> designColors =
-    <String, MaterialColor>{
-  'primary': MaterialColor(
-    0xFF7C3AED,
-    <int, Color>{
-      50: Color(0xFFF5EFFE),
-      100: Color(0xFFEADFFC),
-      200: Color(0xFFD2BCF9),
-      300: Color(0xFFBB99F6),
-      400: Color(0xFF9E6DF2),
-      500: Color(0xFF7C3AED),
-      600: Color(0xFF6D33D1),
-      700: Color(0xFF5E2CB4),
-      800: Color(0xFF4F2598),
-      900: Color(0xFF401E7B),
-    }),
+final Map<String, MaterialColor> designColors = <String, MaterialColor>{
+  'primary': MaterialColor(0xFF7C3AED, <int, Color>{
+    50: Color(0xFFF5EFFE),
+    100: Color(0xFFEADFFC),
+    200: Color(0xFFD2BCF9),
+    300: Color(0xFFBB99F6),
+    400: Color(0xFF9E6DF2),
+    500: Color(0xFF7C3AED),
+    600: Color(0xFF6D33D1),
+    700: Color(0xFF5E2CB4),
+    800: Color(0xFF4F2598),
+    900: Color(0xFF401E7B),
+  }),
 };

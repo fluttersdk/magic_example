@@ -137,16 +137,10 @@ class WelcomeView extends StatelessWidget {
                 className: 'p-2 rounded-lg bg-primary-container',
                 child: WIcon(icon, className: 'text-lg text-fg'),
               ),
-              WText(
-                title,
-                className: 'text-base font-semibold text-fg',
-              ),
+              WText(title, className: 'text-base font-semibold text-fg'),
             ],
           ),
-          WText(
-            description,
-            className: 'text-sm text-fg-muted mb-3',
-          ),
+          WText(description, className: 'text-sm text-fg-muted mb-3'),
           WAnchor(
             onTap: () => Launch.url(url),
             child: WDiv(
