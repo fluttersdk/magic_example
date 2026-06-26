@@ -18,16 +18,24 @@ import 'package:magic_starter/magic_starter.dart'
         Typography,
         TypographyVariant;
 
-/// Components preview: a curated matrix of the key library components rendered
-/// in their representative variants.
+/// Components preview: a curated matrix of the key library components.
 ///
-/// This is a static variant matrix (the catalog renders it in light and dark);
-/// interactive components are shown in fixed display states, matching the v1
-/// "no knobs" decision. Selection callbacks are no-ops so the snapshot stays
-/// stable across rebuilds.
-class ComponentsPreview extends StatelessWidget {
+/// Buttons/badges/inputs/cards are shown as static variant matrices; the
+/// interactive controls (switch, tabs, select) are LIVE so the catalog can be
+/// clicked to see real behavior. Layout rows use the `wrap` utility (Wind's
+/// Wrap widget) so they reflow instead of overflowing the pane.
+class ComponentsPreview extends StatefulWidget {
   /// Creates the components preview.
   const ComponentsPreview({super.key});
+
+  @override
+  State<ComponentsPreview> createState() => _ComponentsPreviewState();
+}
+
+class _ComponentsPreviewState extends State<ComponentsPreview> {
+  bool _switchOn = true;
+  int _tabIndex = 1;
+  String _team = 'engineering';
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +71,7 @@ class ComponentsPreview extends StatelessWidget {
       children: [
         for (final ButtonSize size in ButtonSize.values)
           WDiv(
-            className: 'flex flex-row flex-wrap items-center gap-3',
+            className: 'wrap items-center gap-3',
             children: [
               for (final ButtonIntent intent in ButtonIntent.values)
                 Button(
@@ -75,7 +83,7 @@ class ComponentsPreview extends StatelessWidget {
             ],
           ),
         WDiv(
-          className: 'flex flex-row flex-wrap items-center gap-3',
+          className: 'wrap items-center gap-3',
           children: [
             Button(
               isLoading: true,
@@ -96,7 +104,7 @@ class ComponentsPreview extends StatelessWidget {
   /// Every badge tone.
   Widget _buildBadges() {
     return WDiv(
-      className: 'flex flex-row flex-wrap items-center gap-3',
+      className: 'wrap items-center gap-3',
       children: [
         for (final BadgeTone tone in BadgeTone.values)
           Badge(tone.name, tone: tone),
@@ -126,25 +134,27 @@ class ComponentsPreview extends StatelessWidget {
     );
   }
 
-  /// On and off switch states, plus disabled.
+  /// A live switch the user can toggle, plus a disabled one.
   Widget _buildSwitches() {
     return WDiv(
-      className: 'flex flex-row items-center gap-6',
+      className: 'wrap items-center gap-6',
       children: [
-        Switch(value: true, onChanged: (_) {}),
-        Switch(value: false, onChanged: (_) {}),
+        Switch(
+          value: _switchOn,
+          onChanged: (bool v) => setState(() => _switchOn = v),
+        ),
         const Switch(value: true, onChanged: null, disabled: true),
       ],
     );
   }
 
-  /// A single-select dropdown with a chosen value.
+  /// A live single-select dropdown.
   Widget _buildSelect() {
     return WDiv(
       className: 'max-w-xs',
       child: Select<String>(
-        value: 'engineering',
-        onChange: (_) {},
+        value: _team,
+        onChange: (String? v) => setState(() => _team = v ?? _team),
         options: const <SelectOption<String>>[
           SelectOption(value: 'engineering', label: 'Engineering'),
           SelectOption(value: 'design', label: 'Design'),
@@ -154,12 +164,12 @@ class ComponentsPreview extends StatelessWidget {
     );
   }
 
-  /// A tab strip with the second tab active.
+  /// A live tab strip; tapping a tab swaps the panel.
   Widget _buildTabs() {
     return Tabs(
       tabs: const <String>['Overview', 'Members', 'Settings'],
-      selectedIndex: 1,
-      onChanged: (_) {},
+      selectedIndex: _tabIndex,
+      onChanged: (int i) => setState(() => _tabIndex = i),
       panelBuilder: (int index) => WDiv(
         className: 'p-4',
         child: WText('Panel ${index + 1}', className: 'text-fg text-sm'),
@@ -170,7 +180,7 @@ class ComponentsPreview extends StatelessWidget {
   /// Each card variant with a title and body.
   Widget _buildCards() {
     return WDiv(
-      className: 'flex flex-row flex-wrap gap-4',
+      className: 'wrap gap-4',
       children: [
         for (final CardVariant variant in CardVariant.values)
           WDiv(

@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:magic/magic.dart';
 
 import 'preview_mock_harness.dart';
 
@@ -35,9 +34,6 @@ class ScreenPreviewScaffold extends StatefulWidget {
 }
 
 class _ScreenPreviewScaffoldState extends State<ScreenPreviewScaffold> {
-  /// The simulated phone viewport for feature-screen previews.
-  static const Size _phoneViewport = Size(390, 844);
-
   bool _mounted = false;
 
   @override
@@ -55,24 +51,17 @@ class _ScreenPreviewScaffoldState extends State<ScreenPreviewScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    // Simulate a phone viewport. Wind resolves its responsive breakpoints
-    // (sm:/md:/lg:) from MediaQuery.size.width (wind_helpers.dart), NOT the
-    // local box constraints. Without this override a feature screen reads the
-    // full browser width, renders its DESKTOP layout, and overflows the narrow
-    // side-by-side pane. A phone-sized MediaQuery makes it render its MOBILE
-    // layout, which fits the constrained width with no RenderFlex overflow.
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(size: _phoneViewport),
-      child: WDiv(
-        className: 'w-full max-w-[390px] mx-auto',
-        child: SingleChildScrollView(
-          // First frame: a sized placeholder so the column does not jump when
-          // the deferred view mounts. Subsequent frames: the real view.
-          child: _mounted
-              ? Builder(builder: widget.builder)
-              : const SizedBox(height: 320),
-        ),
-      ),
+    // Render the feature view at the catalog pane's natural width so it shows
+    // its REAL responsive layout (the screen reflows with the browser, exactly
+    // as in production). The catalog is a single full-width pane, so no
+    // phone-frame / MediaQuery override is imposed; a vertical scroll keeps a
+    // tall screen reachable.
+    return SingleChildScrollView(
+      // First frame: a sized placeholder so the column does not jump when the
+      // deferred view mounts. Subsequent frames: the real view.
+      child: _mounted
+          ? Builder(builder: widget.builder)
+          : const SizedBox(height: 320),
     );
   }
 }

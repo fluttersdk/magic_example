@@ -70,7 +70,7 @@ class FoundationsPreview extends StatelessWidget {
   /// Surface swatches: a filled tile per background role.
   Widget _buildSurfaceSwatches() {
     return WDiv(
-      className: 'flex flex-row flex-wrap gap-3',
+      className: 'wrap gap-3',
       children: [
         for (final (String name, String token) in _surfaceTokens)
           WDiv(
@@ -89,7 +89,7 @@ class FoundationsPreview extends StatelessWidget {
   /// Foreground swatches: each role's text painted on its natural backdrop.
   Widget _buildForegroundSwatches() {
     return WDiv(
-      className: 'flex flex-row flex-wrap gap-3',
+      className: 'wrap gap-3',
       children: [
         for (final (String name, String token) in _foregroundTokens)
           WDiv(
@@ -107,7 +107,7 @@ class FoundationsPreview extends StatelessWidget {
   /// Border swatches: each border role around a neutral tile.
   Widget _buildBorderSwatches() {
     return WDiv(
-      className: 'flex flex-row flex-wrap gap-3',
+      className: 'wrap gap-3',
       children: [
         for (final (String name, String token) in _borderTokens)
           WDiv(
