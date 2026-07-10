@@ -2,13 +2,13 @@ import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/widgets.dart';
 import 'package:magic/magic.dart';
 import 'package:magic_starter/magic_starter.dart'
-    show Card, CardVariant, Typography, TypographyVariant;
+    show MSCard, CardVariant, MSTypography, TypographyVariant;
 
 /// Dashboard view: the default landing page after successful authentication.
 ///
 /// Design-first: every surface and text color flows through the semantic
 /// alias tokens (`bg-surface`, `text-fg`, ...) so it tracks DESIGN.md in both
-/// light and dark. The quick-link tiles compose the shared [Card] component.
+/// light and dark. The quick-link tiles compose the shared [MSCard] component.
 class DashboardView extends StatelessWidget {
   /// Creates the [DashboardView].
   const DashboardView({super.key});
@@ -46,13 +46,13 @@ class DashboardView extends StatelessWidget {
             ),
           ),
           const WSpacer(className: 'h-6'),
-          Typography(
+          MSTypography(
             appName,
             variant: TypographyVariant.h2,
             className: 'text-center',
           ),
           const WSpacer(className: 'h-2'),
-          const Typography(
+          const MSTypography(
             'Built with Magic Starter',
             variant: TypographyVariant.caption,
           ),
@@ -109,14 +109,14 @@ class DashboardView extends StatelessWidget {
     );
   }
 
-  /// Builds a single quick-link tile composing the shared [Card] component.
+  /// Builds a single quick-link tile composing the shared [MSCard] component.
   Widget _buildLinkCard({
     required IconData icon,
     required String title,
     required String description,
     required String url,
   }) {
-    return Card(
+    return MSCard(
       variant: CardVariant.inset,
       child: WDiv(
         className: 'flex flex-col',
