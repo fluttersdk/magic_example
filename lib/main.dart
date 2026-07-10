@@ -12,23 +12,19 @@ import 'config/broadcasting.dart';
 import 'config/deeplink.dart';
 import 'config/wind_theme.g.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:fluttersdk_dusk/dusk.dart';
-import 'package:magic_devtools/dusk.dart';
-import 'package:fluttersdk_telescope/telescope.dart';
-import 'package:magic_devtools/telescope.dart';
+import 'package:magic_devtools/magic_devtools.dart';
+import 'package:magic_starter/magic_starter.dart' show MagicStarter;
 import 'config/magic_starter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kDebugMode) {
-    DuskPlugin.install();
-  }
-  if (kDebugMode) {
-    TelescopePlugin.install();
-    TelescopePlugin.registerWatcher(ExceptionWatcher());
-    TelescopePlugin.registerWatcher(DumpWatcher());
-  }
+  // Dev tooling (dusk + telescope) boots BEFORE Magic.init so the snapshot
+  // pipeline and exception watchers are live during boot. The kDebugMode guard
+  // keeps the whole branch tree-shaken out of release builds. One call replaces
+  // the separate DuskPlugin / TelescopePlugin installs. See MagicDevtools.
+  if (kDebugMode) MagicDevtools.installPre();
+
   await Magic.init(
     configFactories: [
       () => appConfig,
@@ -44,15 +40,19 @@ void main() async {
       () => magicStarterConfig,
     ],
   );
-  if (kDebugMode) {
-    MagicTelescopeIntegration.install();
-  }
-  if (kDebugMode) {
-    MagicDuskIntegration.install();
-  }
+
+  // Magic integrations wire magic's runtime into dusk + telescope AFTER
+  // Magic.init, once the IoC container is populated. See MagicDevtools.
+  if (kDebugMode) MagicDevtools.installPost();
+
   // Theme generated from DESIGN.md via `design:sync`. Regenerate with:
-  //   dart run magic_example:artisan design:sync
+  //   dart run bin/dispatcher.dart design:sync
   final windTheme = WindThemeData(colors: designColors, aliases: designAliases);
+
+  // Adopt the wind theme across every magic_starter sub-theme in one call, so
+  // the starter's navigation, form, auth, and layout surfaces derive from the
+  // same DESIGN.md tokens instead of the starter defaults.
+  MagicStarter.useWindTheme(windTheme);
 
   runApp(MagicApplication(title: 'Magic Example', windTheme: windTheme));
 }
