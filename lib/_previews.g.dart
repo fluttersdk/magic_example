@@ -4,15 +4,18 @@
 // Source: *.preview.dart files discovered under the scan dir.
 
 import 'package:magic_devtools/preview.dart';
-import 'bottom_menu.preview.dart';
-import 'dashboard_screen.preview.dart';
-import 'foundations.preview.dart';
-import 'login_screen.preview.dart';
-import 'profile_screen.preview.dart';
-import 'register_screen.preview.dart';
-import 'settings_screen.preview.dart';
-import 'sidebar_menu.preview.dart';
-import 'teams_screen.preview.dart';
+import 'preview/bottom_menu.preview.dart';
+import 'preview/dashboard_screen.preview.dart';
+import 'preview/foundations.preview.dart';
+import 'preview/login_screen.preview.dart';
+import 'preview/profile_screen.preview.dart';
+import 'preview/register_screen.preview.dart';
+import 'preview/settings_screen.preview.dart';
+import 'preview/sidebar_menu.preview.dart';
+import 'preview/teams_screen.preview.dart';
+import 'ui/components/callout/callout.preview.dart';
+import 'ui/components/stat_card/stat_card.preview.dart';
+import 'ui/components/tag/tag.preview.dart';
 
 List<PreviewEntry> previewEntries() {
   return <PreviewEntry>[
@@ -20,6 +23,11 @@ List<PreviewEntry> previewEntries() {
       label: 'BottomMenu',
       slug: 'bottom_menu',
       builder: (_) => const BottomMenuPreview(),
+    ),
+    PreviewEntry(
+      label: 'Callout',
+      slug: 'callout',
+      builder: (_) => const CalloutPreview(),
     ),
     PreviewEntry(
       label: 'DashboardScreen',
@@ -57,9 +65,20 @@ List<PreviewEntry> previewEntries() {
       builder: (_) => const SidebarMenuPreview(),
     ),
     PreviewEntry(
+      label: 'StatCard',
+      slug: 'stat_card',
+      builder: (_) => const StatCardPreview(),
+    ),
+    PreviewEntry(
+      label: 'Tag',
+      slug: 'tag',
+      builder: (_) => const TagPreview(),
+    ),
+    PreviewEntry(
       label: 'TeamsScreen',
       slug: 'teams_screen',
       builder: (_) => const TeamsScreenPreview(),
     ),
   ];
 }
+
