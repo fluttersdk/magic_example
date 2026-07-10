@@ -17,7 +17,7 @@ This skill is **MOBILE/Flutter only.** There is no web/CSS mode for this project
 Platform: Flutter (mobile-first, responsive via Wind breakpoint prefixes).
 Styling: Wind className strings only. No raw `Colors.*`, no hardcoded hex in component code.
 Theme: `DESIGN.md` is the single source of truth for all tokens. See the `colors`, `typography`, `rounded`, and `spacing` sections.
-Components: use the project component library (`magic_starter` generic component set). Never build inline one-offs when a library component covers the case.
+Components: use the project component library under `lib/ui/components/`. Never build inline one-offs when a library component covers the case.
 
 ---
 
@@ -294,7 +294,7 @@ Use the `EmptyState` component:
 | CSS-only utilities (`box-shadow`, `filter`, `transform`, `group-*`) | These are unsupported by Wind; use Flutter APIs instead |
 | `Icons.*` inline in component bodies | Extract as `static const IconData _icon = Icons.x;` |
 | Skipping dark/light parity | Every semantic token alias is a light+dark pair; no exceptions |
-| Building one-off widgets when a library component exists | Always check `magic_starter` component library first |
+| Building one-off widgets when a library component exists | Always check the `lib/ui/components/` library (and `docs/component-registry.md`) first |
 
 ---
 
@@ -303,7 +303,7 @@ Use the `EmptyState` component:
 When building a new component, follow the atomic folder convention:
 
 ```
-magic_starter/lib/src/ui/components/<name>/
+lib/ui/components/<name>/
   <name>.dart           # class <Name> extends StatelessWidget
   <name>.recipe.dart    # WindRecipe / WindSlotRecipe
   <name>.preview.dart   # single preview widget (ONE per file)

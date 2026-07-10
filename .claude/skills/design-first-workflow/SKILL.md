@@ -47,7 +47,7 @@ For a new standalone screen, create the view file:
 dart run bin/dispatcher.dart make:component <ScreenName>Preview [--slots]
 ```
 
-Or author the view file directly if it follows an existing auth/profile/settings pattern. Views live under `magic_starter/lib/src/ui/views/<feature>/`. Components live under `magic_starter/lib/src/ui/components/<name>/`.
+Or author the view file directly if it follows an existing auth/profile/settings pattern. Views live under `lib/resources/views/<feature>/`. Components live under `lib/ui/components/<name>/`.
 
 For a new component within the screen, follow the `make-component` skill.
 
@@ -82,7 +82,7 @@ Dark and light screenshots MUST be visually distinct. If they look identical, a 
 
 Compose the screen from library components. Rules:
 
-- Use `magic_starter` components from `docs/component-registry.md`. Do not write one-off inline widgets when a library component fits.
+- Use components from the `lib/ui/components/` library (see `docs/component-registry.md`). Do not write one-off inline widgets when a library component fits.
 - Token discipline: `bg-surface`, `text-fg`, `border-color-border`, etc. Never `Colors.grey.shade200`.
 - Layout: `WDiv` with `flex-col` or `flex-row`; Wind breakpoint prefixes for responsive behavior.
 - Interactive elements: `Button`, `Input`, `Checkbox`, `Switch` from the component library; not raw `WButton`/`WInput` unless the component library explicitly wraps them.

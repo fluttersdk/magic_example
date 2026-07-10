@@ -18,10 +18,10 @@ These rules apply to every UI file. There are no exceptions.
 No `Color(0xFF...)`, no `Colors.*`, no hardcoded pixel values in component or view code. All color decisions go through semantic alias keys from `DESIGN.md` (e.g. `bg-surface`, `text-fg`, `border-color-border`). Every color alias expands to a light+dark pair; always include the `dark:` counterpart.
 
 **2. Build from the component library.**
-Check `docs/component-registry.md` before writing any widget. If a component covers the need, use it. Only scaffold a new component when the registry has no match.
+App-level components live in the local `lib/ui/components/` library (folder-per-component: `<name>.dart` + `<name>.recipe.dart` + `<name>.preview.dart` + `index.dart`; discovered by `/preview` scanning `*.preview.dart`, no app-level barrel, no re-export aliases). Check `docs/component-registry.md` before writing any widget. If a component covers the need, use it. Only scaffold a new one (`make:component`) when the registry has no match.
 
 **3. DESIGN.md is the theme source.**
-`magic_example/DESIGN.md` is the single source of truth for colors, typography, spacing, and rounded values. The generated theme lives at `lib/config/wind_theme.g.dart` (do not hand-edit it). Regenerate after any DESIGN.md change with `dart run bin/dispatcher.dart design:sync`.
+`magic_example/DESIGN.md` is the single source of truth for colors, typography, spacing, and rounded values. The generated theme lives at `lib/config/wind_theme.g.dart` (do not hand-edit it). Regenerate after any DESIGN.md change with `dart run bin/dispatcher.dart design:sync`. For token families `design:sync` does not emit (a custom accent or a status vocabulary), hand-author them in a `lib/config/<app>_status_tokens.dart` supplement and merge them into the `WindThemeData` alias map in `lib/main.dart` (see the Components section of DESIGN.md).
 
 **4. The `/preview` catalog is the visual feedback loop.**
 Every new component requires a preview widget before it ships. Navigate to `/preview` in debug mode to see all registered previews in dark and light. Use dusk screenshots to verify token compliance before merging.

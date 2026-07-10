@@ -12,7 +12,7 @@ These rules apply whenever you touch any file under `lib/`. They complement `CLA
 Every component in the `magic_starter` generic library lives in a 4-file atomic folder:
 
 ```
-magic_starter/lib/src/ui/components/<name>/
+lib/ui/components/<name>/
   <name>.dart           # class <Name> extends StatelessWidget, @immutable
   <name>.recipe.dart    # WindRecipe or WindSlotRecipe
   <name>.preview.dart   # ONE preview widget rendering all variant x state combos

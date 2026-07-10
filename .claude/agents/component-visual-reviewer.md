@@ -50,14 +50,14 @@ Read both screenshots visually. Identify:
 If the component source is accessible, read it to confirm token usage:
 
 ```bash
-find /Users/anilcan/Code/fluttersdk/magic_starter/lib/src/ui/components -name "*.dart" | xargs grep -l "<ComponentName>"
+find /Users/anilcan/Code/fluttersdk/lib/ui/components -name "*.dart" | xargs grep -l "<ComponentName>"
 ```
 
 Look for raw `Color(0xFF...)`, `Colors.*`, or hardcoded pixel margins that indicate a token bypass.
 
 ```bash
-grep -rn "Color(0x\|Colors\." /Users/anilcan/Code/fluttersdk/magic_starter/lib/src/ui/components/<name>/
-grep -rn "SizedBox(height: [0-9]\|SizedBox(width: [0-9]" /Users/anilcan/Code/fluttersdk/magic_starter/lib/src/ui/components/<name>/
+grep -rn "Color(0x\|Colors\." /Users/anilcan/Code/fluttersdk/lib/ui/components/<name>/
+grep -rn "SizedBox(height: [0-9]\|SizedBox(width: [0-9]" /Users/anilcan/Code/fluttersdk/lib/ui/components/<name>/
 ```
 
 ---

@@ -15,7 +15,7 @@ The full lifecycle for authoring a component in this project: from design intent
 Every component follows the atomic 4-file folder shape:
 
 ```
-magic_starter/lib/src/ui/components/<name>/
+lib/ui/components/<name>/
   <name>.dart           # class <Name> extends StatelessWidget, @immutable
   <name>.recipe.dart    # WindRecipe or WindSlotRecipe
   <name>.preview.dart   # ONE preview widget rendering all variants
@@ -48,7 +48,7 @@ dart run bin/dispatcher.dart make:component <Name> [--variants=intent,size] [--s
 ```
 
 This command:
-1. Creates `magic_starter/lib/src/ui/components/<name>/` with the 4 files.
+1. Creates `lib/ui/components/<name>/` with the 4 files.
 2. Populates the recipe with the requested variant axes.
 3. Automatically chains `previews:refresh` so the new preview is registered.
 
@@ -59,10 +59,9 @@ After scaffolding, edit the generated files:
 - `<name>.preview.dart`: render a variant matrix (every combination of variant axes + dark/light). Keep ONE preview class per file.
 - `index.dart`: verify the exports include the component class and any variant enums, but NOT the preview class.
 
-If you add the component to the barrel, export it from `magic_starter/lib/magic_starter.dart`:
+There is no app-level barrel to touch: each component is reached through its own folder `index.dart`, and the `/preview` catalog discovers it by scanning `*.preview.dart`. After editing the preview, regenerate the registry:
 
 ```sh
-# After editing, regenerate the preview registry:
 dart run bin/dispatcher.dart previews:refresh
 ```
 
@@ -160,17 +159,12 @@ final buttonRecipe = WindRecipe(
 
 ## MIGRATING AN EXISTING WIDGET
 
-If the component replaces an existing `MagicStarter*` widget:
+If the component replaces an existing widget:
 
 1. Grep the codebase for all callers and existing className-asserting tests.
 2. Write a baseline helper (`legacyXClassName(...)`) asserting the recipe output is byte-identical to the old pinned strings BEFORE changing the widget body (TDD red phase).
 3. After the recipe is green, move the widget body to call the recipe.
-4. Keep the old widget name as a thin re-export alias so callers and tests remain untouched:
-
-```dart
-// magic_starter_button.dart (old location)
-export 'components/button/button.dart' show Button, ButtonIntent;
-```
+4. Update every caller to the new component and delete the old widget. Do not leave a re-export alias or deprecated wrapper behind; when code is removed it is removed.
 
 Never weaken existing assertions to make them pass.
 

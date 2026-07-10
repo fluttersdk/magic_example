@@ -216,10 +216,43 @@ Corner radii follow the 4px logical scale:
 
 ## Components
 
-Components are described in detail in
-[docs/design-culture/material-design-3.md](docs/design-culture/material-design-3.md).
+App-level components live in the local `lib/ui/components/` library, one atomic
+folder per component (`<name>.dart` + `<name>.recipe.dart` + `<name>.preview.dart`
++ `index.dart`). Variant logic lives in a `WindRecipe` / `WindSlotRecipe` (or
+plain className functions for static components); every color goes through a
+semantic alias token from the `colors` block above, so a component re-skins with
+the theme and carries its own dark pair. There is no app-level barrel: the
+`/preview` catalog discovers components by scanning `*.preview.dart`. Scaffold a
+new one with `dart run bin/dispatcher.dart make:component <Name>`. See
+`.claude/rules/design.md` for the full contract and
+[docs/design-culture/material-design-3.md](docs/design-culture/material-design-3.md)
+for the design detail.
+
+The boilerplate ships three example app-owned components that demonstrate the
+pattern: `Tag` (multi-axis `WindRecipe`: intent x size), `Callout` (single-axis
+`WindRecipe`: intent), and `StatCard` (static slot classNames). They are
+unprefixed (`class Tag`) and are deliberately components magic_starter does NOT
+ship, so they show how an app adds its own layer on top of the `MS*` starter set
+rather than duplicating it.
 
 Variant matrices for every component are available via `flutter run` ->
 `/preview` (debug builds only). Run `dart run bin/dispatcher.dart design:lint`
 to validate token usage; run `dart run bin/dispatcher.dart design:sync` to
 regenerate the Wind theme from this file.
+
+### Custom token families (supplement)
+
+`design:sync` emits only the standard semantic roles from the `colors` block. If
+your product needs an extra token family the sync does not generate (a custom
+accent, or a status vocabulary like `info` / `success` / `warning`), hand-author
+it in a `lib/config/<app>_status_tokens.dart` supplement (a map of alias key to a
+light/dark color pair, the same shape as `designAliases`) and merge it into the
+`WindThemeData` alias map in `lib/main.dart`:
+
+    final windTheme = WindThemeData(
+      colors: designColors,
+      aliases: {...designAliases, ...appStatusAliases},
+    );
+
+Keep the hand-authored families in the supplement, not in DESIGN.md, since
+`design:sync` regenerates `wind_theme.g.dart` and never emits them.

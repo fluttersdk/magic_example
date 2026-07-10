@@ -6,7 +6,7 @@ last_updated: 2026-06-25
 
 # Component Registry
 
-Machine-readable manifest of every component in the `magic_starter` generic component library. Maps each component to its variants, token bindings, and anti-patterns.
+Machine-readable manifest of every component in the app's `lib/ui/components/` library. Maps each component to its variants, token bindings, and anti-patterns.
 
 > **design:registry note**: this file is intended to be generated and kept in sync by `make:component` and `previews:refresh`. Until that command emits it automatically, maintain it by hand when adding or modifying components.
 
@@ -22,7 +22,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Button
 
-- **File**: `magic_starter/lib/src/ui/components/button/`
+- **File**: `lib/ui/components/button/`
 - **Class**: `Button`
 - **Recipe**: `WindRecipe` in `button.recipe.dart`
 - **Variants**:
@@ -46,7 +46,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Input
 
-- **File**: `magic_starter/lib/src/ui/components/input/`
+- **File**: `lib/ui/components/input/`
 - **Class**: `Input`
 - **Recipe**: `WindRecipe` in `input.recipe.dart`
 - **Variants**:
@@ -63,7 +63,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Textarea
 
-- **File**: `magic_starter/lib/src/ui/components/textarea/`
+- **File**: `lib/ui/components/textarea/`
 - **Class**: `Textarea`
 - **Recipe**: `WindRecipe` in `textarea.recipe.dart`
 - **Variants**:
@@ -76,7 +76,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Checkbox
 
-- **File**: `magic_starter/lib/src/ui/components/checkbox/`
+- **File**: `lib/ui/components/checkbox/`
 - **Class**: `Checkbox`
 - **Recipe**: `WindRecipe` in `checkbox.recipe.dart`
 - **Variants**: none (state is driven by `checked:` prefix)
@@ -90,7 +90,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Switch
 
-- **File**: `magic_starter/lib/src/ui/components/switch/`
+- **File**: `lib/ui/components/switch/`
 - **Class**: `Switch`
 - **Recipe**: `WindRecipe` in `switch.recipe.dart`
 - **Variants**: none (state is driven by `checked:` prefix on track/thumb)
@@ -106,7 +106,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Radio
 
-- **File**: `magic_starter/lib/src/ui/components/radio/`
+- **File**: `lib/ui/components/radio/`
 - **Class**: `Radio`
 - **Generic type**: `Radio<T>`
 - **Recipe**: `WindRecipe` in `radio.recipe.dart`
@@ -124,7 +124,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Badge
 
-- **File**: `magic_starter/lib/src/ui/components/badge/`
+- **File**: `lib/ui/components/badge/`
 - **Class**: `Badge`
 - **Recipe**: `WindRecipe` in `badge.recipe.dart`
 - **Variants**:
@@ -146,7 +146,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Typography
 
-- **File**: `magic_starter/lib/src/ui/components/typography/`
+- **File**: `lib/ui/components/typography/`
 - **Class**: `Typography`
 - **Recipe**: `WindRecipe` in `typography.recipe.dart`
 - **Variants**:
@@ -166,7 +166,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Skeleton
 
-- **File**: `magic_starter/lib/src/ui/components/skeleton/`
+- **File**: `lib/ui/components/skeleton/`
 - **Class**: `Skeleton`
 - **Recipe**: `WindRecipe` in `skeleton.recipe.dart`
 - **Variants**:
@@ -184,7 +184,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Card (migrated from MagicStarterCard)
 
-- **File**: `magic_starter/lib/src/ui/components/card/`
+- **File**: `lib/ui/components/card/`
 - **Class**: `Card`
 - **Enum**: `CardVariant`
 - **Recipe**: `WindRecipe` in `card.recipe.dart`
@@ -206,7 +206,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Select
 
-- **File**: `magic_starter/lib/src/ui/components/select/`
+- **File**: `lib/ui/components/select/`
 - **Class**: `Select`
 - **Recipe**: `WindSlotRecipe` in `select.recipe.dart`
 - **Slots**: `trigger`, `popup`, `item`
@@ -221,7 +221,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Combobox
 
-- **File**: `magic_starter/lib/src/ui/components/combobox/`
+- **File**: `lib/ui/components/combobox/`
 - **Class**: `Combobox`
 - **Recipe**: `WindSlotRecipe` in `combobox.recipe.dart`
 - **Slots**: `trigger`, `popup`, `item`
@@ -232,7 +232,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### SegmentedControl
 
-- **File**: `magic_starter/lib/src/ui/components/segmented_control/`
+- **File**: `lib/ui/components/segmented_control/`
 - **Class**: `SegmentedControl`
 - **Recipe**: `WindSlotRecipe` in `segmented_control.recipe.dart`
 - **Variants**:
@@ -249,7 +249,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Tabs
 
-- **File**: `magic_starter/lib/src/ui/components/tabs/`
+- **File**: `lib/ui/components/tabs/`
 - **Class**: `Tabs`
 - **Recipe**: `WindSlotRecipe` in `tabs.recipe.dart`
 - **Slots**: `list`, `tab`, `panel`
@@ -265,7 +265,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Accordion
 
-- **File**: `magic_starter/lib/src/ui/components/accordion/`
+- **File**: `lib/ui/components/accordion/`
 - **Class**: `Accordion`
 - **Recipe**: `WindSlotRecipe` in `accordion.recipe.dart`
 - **Slots**: `root`, `item`, `header`, `trigger`, `panel`
@@ -282,7 +282,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Dialog
 
-- **File**: `magic_starter/lib/src/ui/components/dialog/`
+- **File**: `lib/ui/components/dialog/`
 - **Class**: `Dialog`
 - **Recipe**: `WindSlotRecipe` in `dialog.recipe.dart`
 - **Slots**: `backdrop`, `panel`, `title`, `footer`
@@ -299,7 +299,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### ConfirmDialog
 
-- **File**: `magic_starter/lib/src/ui/components/confirm_dialog/`
+- **File**: `lib/ui/components/confirm_dialog/`
 - **Class**: `ConfirmDialog`
 - **Enum**: `ConfirmDialogVariant`
 - **Recipe**: `WindSlotRecipe` in `confirm_dialog.recipe.dart`
@@ -317,7 +317,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### BottomSheet
 
-- **File**: `magic_starter/lib/src/ui/components/bottom_sheet/`
+- **File**: `lib/ui/components/bottom_sheet/`
 - **Class**: `BottomSheet`
 - **Recipe**: `WindSlotRecipe` in `bottom_sheet.recipe.dart`
 - **Slots**: `backdrop`, `panel`, `handle`, `title`, `footer`
@@ -332,7 +332,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Toast
 
-- **File**: `magic_starter/lib/src/ui/components/toast/`
+- **File**: `lib/ui/components/toast/`
 - **Class**: `Toast`
 - **Recipe**: `WindRecipe` in `toast.recipe.dart`
 - **Variants**:
@@ -350,7 +350,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Tooltip
 
-- **File**: `magic_starter/lib/src/ui/components/tooltip/`
+- **File**: `lib/ui/components/tooltip/`
 - **Class**: `Tooltip`
 - **Recipe**: `WindSlotRecipe` in `tooltip.recipe.dart`
 - **Slots**: `trigger`, `content`
@@ -364,7 +364,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### DropdownMenu
 
-- **File**: `magic_starter/lib/src/ui/components/dropdown_menu/`
+- **File**: `lib/ui/components/dropdown_menu/`
 - **Class**: `DropdownMenu`
 - **Recipe**: `WindSlotRecipe` in `dropdown_menu.recipe.dart`
 - **Slots**: `trigger`, `panel`, `item`, `separator`
@@ -382,7 +382,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### FormField
 
-- **File**: `magic_starter/lib/src/ui/components/form_field/`
+- **File**: `lib/ui/components/form_field/`
 - **Class**: `FormField` (exported as `MagicFormField` to avoid collision with Flutter's `FormField`)
 - **Recipe**: `WindSlotRecipe` in `form_field.recipe.dart`
 - **Slots**: `root`, `label`, `hint`, `error`
@@ -399,7 +399,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### PageHeader
 
-- **File**: `magic_starter/lib/src/ui/components/page_header/`
+- **File**: `lib/ui/components/page_header/`
 - **Class**: `PageHeader`
 - **Recipe**: `WindSlotRecipe` in `page_header.recipe.dart`
 - **Slots**: `title`, `subtitle`, `leading`, `actions`, `inlineActions`
@@ -413,7 +413,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### EmptyState
 
-- **File**: `magic_starter/lib/src/ui/components/empty_state/`
+- **File**: `lib/ui/components/empty_state/`
 - **Class**: `EmptyState`
 - **Recipe**: `WindSlotRecipe` in `empty_state.recipe.dart`
 - **Slots**: `root`, `iconWrap`, `title`, `description`, `action`
@@ -429,7 +429,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### ErrorState
 
-- **File**: `magic_starter/lib/src/ui/components/error_state/`
+- **File**: `lib/ui/components/error_state/`
 - **Class**: `ErrorState`
 - **Recipe**: `WindSlotRecipe` in `error_state.recipe.dart`
 - **Slots**: `root`, `iconWrap`, `title`, `description`, `action`
@@ -444,7 +444,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### Navbar
 
-- **File**: `magic_starter/lib/src/ui/components/navbar/`
+- **File**: `lib/ui/components/navbar/`
 - **Class**: `Navbar`
 - **Recipe**: `WindSlotRecipe` in `navbar.recipe.dart`
 - **Slots**: `root`, `item`, `activeItem`
@@ -462,7 +462,7 @@ Components backed by a Wind W-widget with no recipe layer.
 
 ### SocialDivider
 
-- **File**: `magic_starter/lib/src/ui/components/social_divider/`
+- **File**: `lib/ui/components/social_divider/`
 - **Class**: `SocialDivider`
 - **Token bindings**: `border-color-border text-fg-muted`
 - **Anti-patterns**:
