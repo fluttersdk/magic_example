@@ -113,11 +113,16 @@ class DashboardView extends StatelessWidget {
 
           // 3. Plan-gate demo: shows the one intended way a gated action is
           // surfaced (see UpgradePrompt's own docblock), never a bare error
-          // toast. `onUpgrade` calls UpgradePrompt.startUpgrade so tapping it
-          // routes to billing with the required tier attached; a real fork
-          // wires the billing route itself. This block is display-only, no
-          // network call and no fake response, since the point is the
-          // wiring, not a working checkout.
+          // toast. `onUpgrade` calls UpgradePrompt.startUpgrade, which routes to
+          // MagicStarterConfig.billingRoute() with the required tier attached.
+          //
+          // In THIS app that tap does nothing visible: only `/` is registered
+          // (lib/routes/app.dart), the starter ships no billing view, and
+          // magic's router logs "Route not found" and stays put. That is the
+          // honest state of a demo, not a bug: a fork registers its own billing
+          // route (or points magic_starter.routes.billing at one) and the same
+          // call starts working. Display-only otherwise, with no network call
+          // and no fake response, since the point is the wiring.
           MSUpgradeNudge(
             message: 'AI-powered insights are available on the Pro plan.',
             requiredPlan: _demoRequiredPlanLabel,
