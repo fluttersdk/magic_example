@@ -32,9 +32,16 @@ class DashboardView extends StatelessWidget {
   static const _iconArrow = Icons.arrow_forward_outlined;
   static const _iconHeart = Icons.favorite;
 
-  /// Plan catalog id used by the upgrade demo below. A real app reads this
-  /// off the gated response instead of hardcoding it.
-  static const _demoRequiredPlan = 'Pro';
+  /// Plan catalog id used by the upgrade demo below, lowercase because that is
+  /// what the billing endpoints accept and what the backend sends back in
+  /// `upgrade.required_plan`. A real app reads it off the gated response rather
+  /// than hardcoding it.
+  static const _demoRequiredPlanId = 'pro';
+
+  /// The same tier as a display label. Kept separate from the id on purpose:
+  /// the widget renders this, the checkout intent carries the id, and mixing
+  /// them sends `?upgrade=Pro` where the catalog expects `pro`.
+  static const _demoRequiredPlanLabel = 'Pro';
 
   @override
   Widget build(BuildContext context) {
@@ -113,8 +120,8 @@ class DashboardView extends StatelessWidget {
           // wiring, not a working checkout.
           MSUpgradeNudge(
             message: 'AI-powered insights are available on the Pro plan.',
-            requiredPlan: _demoRequiredPlan,
-            onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlan),
+            requiredPlan: _demoRequiredPlanLabel,
+            onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlanId),
           ),
 
           const WSpacer(className: 'h-8'),
