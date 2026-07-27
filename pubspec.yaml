@@ -31,52 +31,31 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Local path links to the magic ecosystem under development in this workspace.
-  magic:
-    path: ../magic
-  magic_deeplink:
-    path: ../magic_deeplink
-  magic_notifications:
-    path: ../magic_notifications
-  magic_social_auth:
-    path: ../magic_social_auth
-  magic_starter:
-    path: ../magic_starter
+  # Hosted (published pub.dev) versions of the magic ecosystem, so a fork
+  # copied outside this workspace resolves without any sibling checkout.
+  # In-workspace development overrides these to local path checkouts via the
+  # gitignored pubspec_overrides.yaml; that file never ships in the fork.
+  magic: ^0.0.5
+  magic_deeplink: ^0.0.2
+  magic_notifications: ^0.0.2
+  magic_social_auth: ^0.0.2
+  magic_starter: ^0.0.1-alpha.16
 
   # Dev-tooling, imported by lib/main.dart under kDebugMode (release tree-shakes).
-  magic_devtools:
-    path: ../magic_devtools
-  fluttersdk_dusk:
-    path: ../dusk
-  fluttersdk_telescope:
-    path: ../telescope
+  magic_devtools: ^0.0.1
+  fluttersdk_dusk: ^0.0.8
+  fluttersdk_telescope: ^0.0.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  fluttersdk_artisan: any
+  fluttersdk_artisan: ^0.0.8
 
-# Force every reference (root and transitive) to the local workspace source so
-# the plugins' own hosted magic constraints do not clash with the path links above.
-dependency_overrides:
-  magic:
-    path: ../magic
-  magic_deeplink:
-    path: ../magic_deeplink
-  magic_notifications:
-    path: ../magic_notifications
-  magic_social_auth:
-    path: ../magic_social_auth
-  magic_starter:
-    path: ../magic_starter
-  magic_devtools:
-    path: ../magic_devtools
-  fluttersdk_dusk:
-    path: ../dusk
-  fluttersdk_telescope:
-    path: ../telescope
-  # Pin to the stable line: magic's ">=11.0.2 <13.0.0" otherwise lets the
-  # 12.0.0-beta prerelease resolve, whose non-null saveFile params break magic.
+  # Pin as a real dependency, not a workspace-only override: magic's own
+  # file_picker constraint (">=11.0.2 <12.0.0-0") already excludes the
+  # 12.0.0-beta prerelease, but a fork resolving purely from pub.dev has no
+  # dependency_overrides safety net, so pin it here too. The beta's non-null
+  # saveFile params break magic.
   file_picker: ^11.0.2
 
 dev_dependencies:
@@ -98,6 +77,12 @@ flutter:
 
   assets:
     - assets/lang/en.json
+    # Runtime env (APP_NAME, APP_KEY, BROADCAST_CONNECTION, REVERB_*). Must be
+    # bundled as an asset so flutter_dotenv can load it on web; without this the
+    # app falls back to Env defaults (BROADCAST_CONNECTION=null) and realtime
+    # never connects. `.env` is gitignored, so CI/release builds must provision
+    # it (it carries only public client config).
+    - .env
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

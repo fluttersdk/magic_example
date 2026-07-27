@@ -2,13 +2,25 @@ import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/widgets.dart';
 import 'package:magic/magic.dart';
 import 'package:magic_starter/magic_starter.dart'
-    show MSCard, CardVariant, MSTypography, TypographyVariant;
+    show
+        MSCard,
+        CardVariant,
+        MSTypography,
+        TypographyVariant,
+        MSUpgradeNudge,
+        UpgradePrompt;
 
 /// Dashboard view: the default landing page after successful authentication.
 ///
 /// Design-first: every surface and text color flows through the semantic
 /// alias tokens (`bg-surface`, `text-fg`, ...) so it tracks DESIGN.md in both
 /// light and dark. The quick-link tiles compose the shared [MSCard] component.
+///
+/// The "AI Insights" banner below the quick links is a DEMO of the
+/// [UpgradePrompt] seam, not a real billing integration: a fork with no plan
+/// gating can delete the whole "3. Plan-gate demo" block, and a fork that
+/// does gate features can copy the pattern into a real controller's non-2xx
+/// branch (`UpgradePrompt.showIfGated(response)`).
 class DashboardView extends StatelessWidget {
   /// Creates the [DashboardView].
   const DashboardView({super.key});
@@ -19,6 +31,10 @@ class DashboardView extends StatelessWidget {
   static const _iconCli = Icons.terminal;
   static const _iconArrow = Icons.arrow_forward_outlined;
   static const _iconHeart = Icons.favorite;
+
+  /// Plan catalog id used by the upgrade demo below. A real app reads this
+  /// off the gated response instead of hardcoding it.
+  static const _demoRequiredPlan = 'Pro';
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +104,22 @@ class DashboardView extends StatelessWidget {
 
           const WSpacer(className: 'h-8'),
 
-          // 3. Footer.
+          // 3. Plan-gate demo: shows the one intended way a gated action is
+          // surfaced (see UpgradePrompt's own docblock), never a bare error
+          // toast. `onUpgrade` calls UpgradePrompt.startUpgrade so tapping it
+          // routes to billing with the required tier attached; a real fork
+          // wires the billing route itself. This block is display-only, no
+          // network call and no fake response, since the point is the
+          // wiring, not a working checkout.
+          MSUpgradeNudge(
+            message: 'AI-powered insights are available on the Pro plan.',
+            requiredPlan: _demoRequiredPlan,
+            onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlan),
+          ),
+
+          const WSpacer(className: 'h-8'),
+
+          // 4. Footer.
           WDiv(
             className: 'flex flex-row items-center justify-center gap-1',
             children: [

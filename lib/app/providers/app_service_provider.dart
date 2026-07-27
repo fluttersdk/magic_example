@@ -12,7 +12,7 @@ class AppServiceProvider extends ServiceProvider {
 
   @override
   void register() {
-    // Bind your services here (sync only — do not resolve other services).
+    // Bind your services here (sync only, do not resolve other services).
     // Example:
     //   app.singleton('my_service', () => MyService());
   }
@@ -25,7 +25,23 @@ class AppServiceProvider extends ServiceProvider {
     //   Auth.manager.setUserFactory((data) => User.fromMap(data));
     // Magic Starter: Register user factory for auth session restoration.
     Auth.manager.setUserFactory((data) => User.fromMap(data));
-    MagicStarter.useUserModel((data) => User.fromMap(data));
+
+    // Magic Starter: Register the identity contract in one call. The team
+    // trio is required here because `magic_starter.features.teams` is true
+    // in lib/config/magic_starter.dart; omitting it would throw a StateError.
+    MagicStarter.bootstrap(
+      userFactory: (data) => User.fromMap(data),
+      onLogout: () async {
+        await Auth.logout();
+        MagicRoute.to(MagicStarterConfig.loginRoute());
+      },
+      locales: {'en': 'English'},
+      currentTeam: () => User.current.currentTeam?.toMagicStarterTeam(),
+      allTeams: () =>
+          User.current.allTeams.map((t) => t.toMagicStarterTeam()).toList(),
+      onSwitch: (teamId) =>
+          MagicStarterTeamController.instance.switchTeam(teamId),
+    );
 
     // Magic Starter: Navigation items for sidebar and mobile bottom bar.
     MagicStarter.useNavigation(
@@ -55,22 +71,13 @@ class AppServiceProvider extends ServiceProvider {
       ],
     );
 
-    // Magic Starter: Logout callback.
-    MagicStarter.useLogout(() async {
-      await Auth.logout();
-      MagicRoute.to(MagicStarterConfig.loginRoute());
-    });
-
-    // Magic Starter: Supported locale options for profile settings.
-    MagicStarter.useLocaleOptions({'en': 'English'});
-
-    // Magic Starter: Team resolver for sidebar team switcher.
-    MagicStarter.useTeamResolver(
-      currentTeam: () => User.current.currentTeam?.toMagicStarterTeam(),
-      allTeams: () =>
-          User.current.allTeams.map((t) => t.toMagicStarterTeam()).toList(),
-      onSwitch: (teamId) =>
-          MagicStarterTeamController.instance.switchTeam(teamId),
-    );
+    // Magic Starter: reset every session-scoped controller (polling,
+    // realtime, cached lists) on login and team switch. Registered last so
+    // the identity contract and navigation above already point at the new
+    // session before SessionScopeSync refetches its data; registering it
+    // earlier would refetch against the previous tenant's resolver. Without
+    // this, magic's Type-keyed singleton controllers keep the previous
+    // tenant's rows on screen after a re-login or team switch.
+    SessionScopeSync.attach();
   }
 }

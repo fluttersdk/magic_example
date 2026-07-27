@@ -1,6 +1,10 @@
 # Magic Example
 
-Reference app for the `magic` framework and `magic_starter` starter kit. Single-brand violet, Wind semantic tokens, M3-role palette. Consumes and demonstrates the full design-first component system.
+Batteries-included boilerplate for real apps built on the `magic` framework and `magic_starter` starter kit. Single-brand violet, Wind semantic tokens, M3-role palette. Consumes and demonstrates the full design-first component system, including all eight fluttersdk dependencies (magic, magic_deeplink, magic_notifications, magic_social_auth, magic_starter, magic_devtools, dusk, telescope). Production apps in this ecosystem typically fork this project.
+
+## Two examples in the workspace
+
+This repo is one of two example projects; they serve different roles and cannot be merged. **`magic/example/`** (in the `magic` package repo) is magic's in-repo smoke reference: minimal, plugin-free, pinned `magic: {path: ..}`, runs in CI, and published on pub.dev's package tab. **`magic_example/`** (this repo at the workspace root) is the batteries-included starting point for real products: full dependency wiring, hosted resolution, design-first theming, and production directory shape. The split exists because **pub refuses to unify path and hosted dependencies in the same resolution graph**. Adding `magic_notifications: ^0.0.2` to `magic/example` while keeping `magic: {path: ..}` fails with "Because magic_notifications depends on magic from hosted and example depends on magic from path, magic_notifications is forbidden." This is a hard technical constraint, so both examples stay: one minimal for reference, one production-ready for forking.
 
 ## Stack
 
