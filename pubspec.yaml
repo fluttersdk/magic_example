@@ -77,11 +77,13 @@ flutter:
 
   assets:
     - assets/lang/en.json
-    # Runtime env (APP_NAME, APP_KEY, BROADCAST_CONNECTION, REVERB_*). Must be
-    # bundled as an asset so flutter_dotenv can load it on web; without this the
-    # app falls back to Env defaults (BROADCAST_CONNECTION=null) and realtime
-    # never connects. `.env` is gitignored, so CI/release builds must provision
-    # it (it carries only public client config).
+    # Runtime env. Must be bundled so flutter_dotenv can load it on web;
+    # without this the app silently falls back to Env defaults
+    # (BROADCAST_CONNECTION=null) and realtime never connects. `.env` is
+    # COMMITTED rather than gitignored precisely because it is an asset: a
+    # missing asset fails `flutter build`, so a gitignored one would leave every
+    # fresh clone of this template unbuildable. It carries public client config
+    # only; a client bundle cannot hold a secret.
     - .env
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

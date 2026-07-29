@@ -49,7 +49,6 @@ app.*.map.json
 pubspec_overrides.yaml
 
 # Secrets (never commit; .env.example is the template)
-/.env
 
 # ac orchestration artifacts (plan + evidence)
 .ac/

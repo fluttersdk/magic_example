@@ -26,13 +26,15 @@ Follow these steps in order; each one depends on the previous.
    `com.fluttersdk.magic_example`) and the iOS
    `PRODUCT_BUNDLE_IDENTIFIER` entries in
    `ios/Runner.xcodeproj/project.pbxproj` (currently `com.fluttersdk.magicExample`).
-2. **Replace `.env`.** Copy `.env.example` to `.env` and fill in `APP_NAME`,
-   `APP_ENV`, `APP_DEBUG`, `APP_KEY`, and `API_URL` for the new product and its
-   backend. `.env` is gitignored on purpose (it is a per-environment secret
-   file, never a committed template) but it IS bundled as a Flutter asset in
-   `pubspec.yaml`, because `flutter_dotenv` can only load it on web when it is
-   a bundled asset; without the bundling the app silently falls back to
-   `Env` defaults instead of erroring.
+2. **Edit `.env`.** Set `APP_NAME` and point `API_URL` at the new backend, then
+   run `magic key:generate` if the app uses the `Crypt` facade. `.env` is
+   COMMITTED here and bundled as a Flutter asset in `pubspec.yaml`, which is
+   deliberate on both counts: `flutter_dotenv` can only load it on web when it is
+   a bundled asset, and a bundled asset that does not exist fails
+   `flutter build`, so gitignoring it would make every fresh clone of this
+   template unbuildable. It holds public client values only. A Flutter bundle
+   ships to every user's device and can be read out of it, so real secrets
+   belong on the backend, never here. `.env.example` stays as the key list.
 3. **Set bundle ids and app icons.** Reuse the identifiers you set in step 1
    for the platform bundle/app ids, then replace the launcher icons under
    `android/app/src/main/res/mipmap-*` and `ios/Runner/Assets.xcassets/AppIcon.appiconset/`.
