@@ -35,21 +35,21 @@ dependencies:
   # copied outside this workspace resolves without any sibling checkout.
   # In-workspace development overrides these to local path checkouts via the
   # gitignored pubspec_overrides.yaml; that file never ships in the fork.
-  magic: ^0.0.5
+  magic: ^0.0.6
   magic_deeplink: ^0.0.2
   magic_notifications: ^0.0.2
   magic_social_auth: ^0.0.2
-  magic_starter: ^0.0.1-alpha.16
+  magic_starter: ^0.0.1-alpha.17
 
   # Dev-tooling, imported by lib/main.dart under kDebugMode (release tree-shakes).
-  magic_devtools: ^0.0.1
-  fluttersdk_dusk: ^0.0.8
+  magic_devtools: ^0.0.2
+  fluttersdk_dusk: ^0.0.9
   fluttersdk_telescope: ^0.0.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  fluttersdk_artisan: ^0.0.8
+  fluttersdk_artisan: ^0.0.9
 
   # Pin as a real dependency, not a workspace-only override: magic's own
   # file_picker constraint (">=11.0.2 <12.0.0-0") already excludes the
