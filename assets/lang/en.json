@@ -17,7 +17,10 @@
     "user": "User",
     "done": "Done",
     "error_occurred": "An unexpected error occurred. Please try again.",
-    "page_of": ":current / :total"
+    "page_of": ":current / :total",
+    "upgrade": "Upgrade",
+    "upgrade_available_on": "Available on :plan and up.",
+    "upgrade_dialog_not_now": "Not now"
   },
   "validation": {
     "required": "The :attribute field is required.",

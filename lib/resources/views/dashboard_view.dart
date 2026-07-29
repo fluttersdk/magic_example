@@ -2,13 +2,25 @@ import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/widgets.dart';
 import 'package:magic/magic.dart';
 import 'package:magic_starter/magic_starter.dart'
-    show MSCard, CardVariant, MSTypography, TypographyVariant;
+    show
+        MSCard,
+        CardVariant,
+        MSTypography,
+        TypographyVariant,
+        MSUpgradeNudge,
+        UpgradePrompt;
 
 /// Dashboard view: the default landing page after successful authentication.
 ///
 /// Design-first: every surface and text color flows through the semantic
 /// alias tokens (`bg-surface`, `text-fg`, ...) so it tracks DESIGN.md in both
 /// light and dark. The quick-link tiles compose the shared [MSCard] component.
+///
+/// The "AI Insights" banner below the quick links is a DEMO of the
+/// [UpgradePrompt] seam, not a real billing integration: a fork with no plan
+/// gating can delete the whole "3. Plan-gate demo" block, and a fork that
+/// does gate features can copy the pattern into a real controller's non-2xx
+/// branch (`UpgradePrompt.showIfGated(response)`).
 class DashboardView extends StatelessWidget {
   /// Creates the [DashboardView].
   const DashboardView({super.key});
@@ -19,6 +31,17 @@ class DashboardView extends StatelessWidget {
   static const _iconCli = Icons.terminal;
   static const _iconArrow = Icons.arrow_forward_outlined;
   static const _iconHeart = Icons.favorite;
+
+  /// Plan catalog id used by the upgrade demo below, lowercase because that is
+  /// what the billing endpoints accept and what the backend sends back in
+  /// `upgrade.required_plan`. A real app reads it off the gated response rather
+  /// than hardcoding it.
+  static const _demoRequiredPlanId = 'pro';
+
+  /// The same tier as a display label. Kept separate from the id on purpose:
+  /// the widget renders this, the checkout intent carries the id, and mixing
+  /// them sends `?upgrade=Pro` where the catalog expects `pro`.
+  static const _demoRequiredPlanLabel = 'Pro';
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +111,27 @@ class DashboardView extends StatelessWidget {
 
           const WSpacer(className: 'h-8'),
 
-          // 3. Footer.
+          // 3. Plan-gate demo: shows the one intended way a gated action is
+          // surfaced (see UpgradePrompt's own docblock), never a bare error
+          // toast. `onUpgrade` calls UpgradePrompt.startUpgrade, which routes to
+          // MagicStarterConfig.billingRoute() with the required tier attached.
+          //
+          // In THIS app that tap does nothing visible: only `/` is registered
+          // (lib/routes/app.dart), the starter ships no billing view, and
+          // magic's router logs "Route not found" and stays put. That is the
+          // honest state of a demo, not a bug: a fork registers its own billing
+          // route (or points magic_starter.routes.billing at one) and the same
+          // call starts working. Display-only otherwise, with no network call
+          // and no fake response, since the point is the wiring.
+          MSUpgradeNudge(
+            message: 'AI-powered insights are available on the Pro plan.',
+            requiredPlan: _demoRequiredPlanLabel,
+            onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlanId),
+          ),
+
+          const WSpacer(className: 'h-8'),
+
+          // 4. Footer.
           WDiv(
             className: 'flex flex-row items-center justify-center gap-1',
             children: [

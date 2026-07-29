@@ -49,10 +49,17 @@ app.*.map.json
 pubspec_overrides.yaml
 
 # Secrets (never commit; .env.example is the template)
-/.env
 
 # ac orchestration artifacts (plan + evidence)
 .ac/
 
 # Local QA report (not part of the published example)
 /REPORT.md
+
+# pubspec.lock is NOT committed here, unlike a normal application. This project
+# is a template that gets forked, and its lock can only ever be generated with
+# pubspec_overrides.yaml active, so every committed lock encodes
+# `path: "../magic"` and friends: paths that do not exist in a fork. A fork's
+# first `flutter pub get` writes a correct lock against the hosted constraints
+# in pubspec.yaml.
+pubspec.lock
