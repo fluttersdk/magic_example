@@ -1,5 +1,6 @@
 <?php
 
+use FlutterSdk\MagicStarter\Features;
 use FlutterSdk\MagicStarter\Models\Team;
 use FlutterSdk\MagicStarter\Models\TeamInvitation;
 use FlutterSdk\MagicStarter\Models\TeamUser;
@@ -34,10 +35,10 @@ return [
     */
 
     'features' => [
-        \FlutterSdk\MagicStarter\Features::twoFactorAuthentication(),
-        \FlutterSdk\MagicStarter\Features::teams(),
+        Features::twoFactorAuthentication(),
+        Features::teams(),
         // \FlutterSdk\MagicStarter\Features::profilePhotos(),
-        \FlutterSdk\MagicStarter\Features::sessions(),
+        Features::sessions(),
         // \FlutterSdk\MagicStarter\Features::socialLogin(),
         // \FlutterSdk\MagicStarter\Features::newsletterSubscription(),
         // \FlutterSdk\MagicStarter\Features::extendedProfile(),
@@ -45,7 +46,7 @@ return [
         // \FlutterSdk\MagicStarter\Features::onesignal(),
         // \FlutterSdk\MagicStarter\Features::guestAuth(),
         // \FlutterSdk\MagicStarter\Features::phoneOtp(),
-        \FlutterSdk\MagicStarter\Features::emailVerification(),
+        Features::emailVerification(),
         // \FlutterSdk\MagicStarter\Features::timezones(),
     ],
 
