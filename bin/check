@@ -19,7 +19,7 @@
 set -u -o pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || exit 1
 
 FAST=0
 SCOPES=""
@@ -87,13 +87,24 @@ bootstrap_ignored_files() {
     [ "$main_root" = "$REPO_ROOT" ] && return 0
     [ -d "$main_root" ] || return 0
 
-    for file in pubspec_overrides.yaml backend/.env .artisan/plugins.json backend/public/build; do
+    for file in backend/.env .artisan/plugins.json backend/public/build; do
         if [ ! -e "$REPO_ROOT/$file" ] && [ -e "$main_root/$file" ]; then
             mkdir -p "$(dirname "$REPO_ROOT/$file")"
             cp -R "$main_root/$file" "$REPO_ROOT/$file"
             echo "check: copied $file from the main worktree at $main_root"
         fi
     done
+}
+
+# `composer install` is the one bootstrap step this script will not do for you: a
+# branch that touches composer.lock must be tested against its own vendor tree, and
+# symlinking the main worktree's would quietly test the wrong one.
+require_backend_vendor() {
+    wants backend || return 0
+    [ -f backend/vendor/autoload.php ] && return 0
+
+    echo "check: backend/vendor is absent here. Run: (cd backend && composer install)" >&2
+    exit 1
 }
 
 # A Blade view that calls `@vite` throws when the manifest is absent, and
@@ -111,6 +122,7 @@ ensure_vite_manifest() {
 }
 
 bootstrap_ignored_files
+require_backend_vendor
 ensure_vite_manifest
 
 # Resolve dependencies BEFORE fanning out, then run the two flutter commands with
@@ -129,11 +141,12 @@ prepare() {
     fi
 }
 
-LOG_DIR="$(mktemp -d)"
-trap 'rm -rf "$LOG_DIR"' EXIT
-
 JOB_NAMES=""
 JOB_PIDS=""
+
+LOG_DIR="$(mktemp -d)" || exit 1
+# Kill the suites on the way out too, so a tool-call timeout does not orphan them.
+trap 'rm -rf "$LOG_DIR"; [ -n "$JOB_PIDS" ] && kill $JOB_PIDS 2>/dev/null' EXIT INT TERM
 
 start() {
     local name="$1"
@@ -149,7 +162,9 @@ run_backend_pint() { cd backend && vendor/bin/pint --test; }
 # Sequential on purpose: this backend has a handful of tests, and paratest would
 # spend more time booting worker processes than it saves. The parallelism that
 # pays here is across the halves, not inside one suite.
-run_backend_test() { cd backend && php artisan test; }
+# `config:clear` first: a bootstrap/cache/config.php left by any artisan optimize
+# outranks phpunit.xml's sqlite pin, and the suite would migrate:fresh a real database.
+run_backend_test() { cd backend && php artisan config:clear >/dev/null && php artisan test; }
 
 echo "check: ${SCOPES# } | $TOTAL_CORES cores, $LANE per suite$([ "$FAST" -eq 1 ] && echo ' | static only')"
 prepare
@@ -189,4 +204,4 @@ if [ -n "$FAILED" ]; then
 fi
 
 echo
-echo "check: all green"
+echo "check: all green | ${SCOPES# }$([ "$FAST" -eq 1 ] && echo ' | static only, no tests ran')"

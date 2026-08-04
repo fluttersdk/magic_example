@@ -16,7 +16,9 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Only for pull requests: cancelling a main run would leave that commit with no
+  # green record at all.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -25,6 +27,7 @@ jobs:
   instructions:
     name: Instruction mirrors
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: CLAUDE.md is a symlink to AGENTS.md
@@ -39,6 +42,7 @@ jobs:
   flutter:
     name: Flutter (analyze + test)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -60,6 +64,7 @@ jobs:
   backend:
     name: Backend (pint + tests)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: backend
