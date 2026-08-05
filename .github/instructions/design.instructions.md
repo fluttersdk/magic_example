@@ -6,7 +6,7 @@ applyTo: "lib/**"
 
 # Design Rules (UI surface)
 
-These rules apply whenever you touch any file under `lib/`. They complement `CLAUDE.md` with the implementation-level specifics.
+These rules apply whenever you touch any file under `lib/`. They complement `.github/copilot-instructions.md` with the implementation-level specifics.
 
 ## Atomic Component Folder Contract
 
@@ -92,7 +92,7 @@ No component ships without a preview widget.
 - The preview file (`<name>.preview.dart`) must render every variant x state combination so the catalog shows the full range.
 - After adding or modifying a preview, regenerate the catalog: `dart run bin/dispatcher.dart previews:refresh`
 - Verify dark/light parity by navigating to `/preview` in debug mode: `./bin/fsa dusk:navigate --route=/preview`
-- Take light and dark screenshots and run the `component-visual-reviewer` agent (`.claude/agents/component-visual-reviewer.md`) before marking a component ship-ready.
+- Take light and dark screenshots and run the `component-visual-reviewer` agent (a Claude Code agent definition; Copilot has no equivalent, so apply those criteria by hand) before marking a component ship-ready.
 
 ## Material Import Discipline
 
