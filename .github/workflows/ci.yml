@@ -92,3 +92,17 @@ jobs:
         run: vendor/bin/pint --test
       - name: Tests
         run: php artisan test
+
+  # Checkout is the whole setup: `bin/design-tokens` is bash, awk and grep over
+  # `lib/**/*.dart`, so it needs neither Flutter nor a dependency install and runs
+  # in well under a second. A new job rather than a step inside the Flutter one, so
+  # a raw colour literal reports as its own line instead of hiding behind an
+  # analyze failure.
+  design-tokens:
+    name: Design tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Scan for raw color literals
+        run: bin/design-tokens
