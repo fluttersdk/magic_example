@@ -69,7 +69,7 @@ This file is canonical. Everything else either points at it or is generated from
 | `.github/instructions/<topic>.instructions.md` | generated from those rules with `applyTo:` frontmatter, so Copilot's PR review applies the same rules |
 | `docs/verification-loop.md` | how a change is proven: static, visual, and dusk E2E |
 
-Other agent infrastructure: skills under `.claude/skills/` (`frontend-design`, `make-component`, `design-first-workflow`), the `component-visual-reviewer` reviewer under `.claude/agents/`, design-culture references under `docs/design-culture/` (Apple HIG, Material 3, Refactoring UI, WCAG, motion, Wind responsive), and the component inventory at `docs/component-registry.md`.
+Other agent infrastructure: skills under `.claude/skills/` (`frontend-design`, `make-component`, `design-first-workflow`), the `component-visual-reviewer` reviewer under `.claude/agents/`, design-culture references under `docs/design-culture/` (Apple HIG, Material 3, Refactoring UI, WCAG, motion, Wind responsive), and the component inventory at `docs/component-registry.md`. `.mcp.json` wires `./bin/fsa mcp:serve` as a project MCP server, which is the same dusk, telescope and artisan surface `docs/verification-loop.md` drives from the shell, offered as tools instead.
 
 After editing this file or any rule, run `bin/sync-instructions` to regenerate the `.github/` mirrors. CI fails when they are out of date.
 

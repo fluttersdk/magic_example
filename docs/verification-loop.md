@@ -49,6 +49,14 @@ improvement, rather than looping on the same finding.
 reads the Semantics tree as a YAML snapshot with stable `[ref=eN]` handles and
 dispatches real gestures through a six-check actionability gate.
 
+Every verb below has a second face. `.mcp.json` wires `./bin/fsa mcp:serve` as a
+project MCP server, so an agent whose client reads that file gets the same dusk,
+telescope and artisan surface as tools rather than as shell commands. Both routes
+drive the same running app through the same per-project state under
+`~/.artisan/sessions/`, so they are interchangeable and can be mixed within one
+walk. This file stays written in CLI form because that is the form that can be
+pasted into a terminal and read back in a log.
+
 Boot the backend, then the app:
 
 ```sh
