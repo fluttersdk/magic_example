@@ -49,6 +49,28 @@ improvement, rather than looping on the same finding.
 reads the Semantics tree as a YAML snapshot with stable `[ref=eN]` handles and
 dispatches real gestures through a six-check actionability gate.
 
+Every verb below has a second face. `.mcp.json` wires `./bin/fsa mcp:serve` as a
+project MCP server, so an agent whose client reads that file gets the same dusk,
+telescope and artisan surface as tools rather than as shell commands. Both routes
+drive the same running app through the same per-project state under
+`~/.artisan/sessions/`, so they are interchangeable and can be mixed within one
+walk. This file stays written in CLI form because that is the form that can be
+pasted into a terminal and read back in a log.
+
+That entry is machine-shaped, and the committed one is the POSIX shape. **On
+Windows, run `dart run :dispatcher mcp:install`**: `bin/fsa` is a `sh` script, so
+`mcp:install` skips that shape on Windows by design and falls back to a `dart run`
+command it can spawn. Regenerating is the fix rather than hand-editing the file,
+because the tool already knows which of its three shapes a machine has, and it is
+idempotent and preserves any other server entry.
+
+It is committed in the fast shape because that is what the fast path is for:
+measured here, `./bin/fsa list` is 0.63s against 5.21s for
+`dart run :dispatcher list`, and a dusk walk pays that per command rather than
+once. `bin/fsa` keys its build cache on `pubspec.lock`, which this repo does not
+track, so its first run after a clone rebuilds the binary; that clone needs
+`flutter pub get` before either route works, which is already the first step.
+
 Boot the backend, then the app:
 
 ```sh
