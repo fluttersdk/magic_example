@@ -10,7 +10,7 @@ import 'config/cache.dart';
 import 'config/logging.dart';
 import 'config/broadcasting.dart';
 import 'config/deeplink.dart';
-import 'config/wind_theme.g.dart';
+import 'config/wind_theme.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:magic_devtools/magic_devtools.dart';
 import 'package:magic_starter/magic_starter.dart' show MagicStarter;
@@ -47,7 +47,10 @@ void main() async {
 
   // Theme generated from DESIGN.md via `design:sync`. Regenerate with:
   //   dart run bin/dispatcher.dart design:sync
-  final windTheme = WindThemeData(colors: designColors, aliases: designAliases);
+  //
+  // Assembled in `config/wind_theme.dart` rather than here, so the token guard
+  // in `test/config/` can ask the same theme this app runs on.
+  final WindThemeData windTheme = buildWindTheme();
 
   // Adopt the wind theme across every magic_starter sub-theme in one call, so
   // the starter's navigation, form, auth, and layout surfaces derive from the
