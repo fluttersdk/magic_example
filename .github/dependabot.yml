@@ -1,0 +1,114 @@
+# Dependabot config for fluttersdk/magic_example
+#
+# This repo is the batteries-included boilerplate: eight fluttersdk packages
+# wired through HOSTED constraints, plus the Laravel backend a fork talks to.
+# Staying current is the product here. A boilerplate pinned to last quarter's
+# stack teaches last quarter's stack, and the pins in `pubspec.yaml` are the
+# first thing a fork inherits.
+#
+# Three ecosystems: the app's pub deps, the backend's composer deps, and the
+# actions CI pins. `dependabot-auto-merge.yml` arms auto-merge for
+# github-actions minor + patch only; a pub or composer bump reaches the app a
+# fork copies, so it keeps a human.
+#
+# `pubspec_overrides.yaml` is gitignored and wires the siblings to local
+# checkouts for development. Dependabot never sees it, which is correct: the
+# committed hosted constraints are what a fork resolves.
+
+version: 2
+
+updates:
+  # App deps (pubspec.yaml at /)
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - pub
+    assignees:
+      - anilcancakir
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # The eight in-house packages move together and move often. One PR for
+      # the stack beats eight, and the whole point of this repo is that the
+      # stack resolves as a set.
+      fluttersdk:
+        patterns:
+          - magic
+          - magic_*
+          - fluttersdk_*
+        update-types:
+          - minor
+          - patch
+      third-party:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - magic
+          - magic_*
+          - fluttersdk_*
+        update-types:
+          - minor
+          - patch
+
+  # Laravel backend (backend/composer.json), monthly: it is a demo API rather
+  # than a deployed app, so a weekly cadence would be noise.
+  - package-ecosystem: composer
+    directory: /backend
+    schedule:
+      interval: monthly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - backend
+    assignees:
+      - anilcancakir
+    commit-message:
+      prefix: chore(backend-deps)
+      include: scope
+    groups:
+      backend-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # GitHub Actions under .github/workflows/
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    assignees:
+      - anilcancakir
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions-official:
+        patterns:
+          - actions/*
+      release-stack:
+        patterns:
+          - dart-lang/*
+          - subosito/*
+          - softprops/*
+          - codecov/*
+      dependabot-helpers:
+        patterns:
+          - dependabot/*
