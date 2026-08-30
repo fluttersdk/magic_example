@@ -73,7 +73,9 @@ updates:
       - anilcancakir
     commit-message:
       prefix: chore(backend-deps)
-      include: scope
+      # No `include: scope` here: Dependabot appends its own `(deps)` when that
+      # is set, and this prefix already carries a scope. The pair produced
+      # `chore(backend-deps)(deps): ...` on the first bump.
     groups:
       backend-minor-and-patch:
         patterns:
