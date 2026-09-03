@@ -87,7 +87,13 @@ bootstrap_ignored_files() {
     [ "$main_root" = "$REPO_ROOT" ] && return 0
     [ -d "$main_root" ] || return 0
 
-    for file in backend/.env .artisan/plugins.json backend/public/build; do
+    # `pubspec_overrides.yaml` is here as well as in `.worktreeinclude`, and the
+    # duplication is deliberate: that file is only consulted when Claude Code creates
+    # the worktree, so a plain `git worktree add` followed by `bin/check` would get
+    # the backend files and no overrides. That combination is the silent one, since
+    # the siblings then resolve from pub.dev and the suite passes against the
+    # published packages rather than the working trees the diff is about.
+    for file in pubspec_overrides.yaml backend/.env .artisan/plugins.json backend/public/build; do
         if [ ! -e "$REPO_ROOT/$file" ] && [ -e "$main_root/$file" ]; then
             mkdir -p "$(dirname "$REPO_ROOT/$file")"
             cp -R "$main_root/$file" "$REPO_ROOT/$file"
