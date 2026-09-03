@@ -24,7 +24,8 @@ That override file is also why a green local run can be a red CI: with it, this 
 ## One task, one worktree, one PR
 
 - Branch from `main` as `feature/<slug>` or `fix/<slug>`, and work in a worktree under `.claude/worktrees/<slug>`.
-- A fresh worktree lacks three gitignored files it needs in order to run: `pubspec_overrides.yaml`, `backend/.env`, `.artisan/plugins.json`. `bin/check` copies them from the main worktree on first run; do not hand-author them.
+- A fresh worktree lacks three gitignored files it needs in order to run: `pubspec_overrides.yaml`, `backend/.env`, `.artisan/plugins.json`. Two mechanisms copy them from the main worktree and neither covers every path on its own: `.worktreeinclude` runs when Claude Code creates the worktree, `bin/check` on its first run there. Do not hand-author them.
+- The paths inside `pubspec_overrides.yaml` must be ABSOLUTE. A worktree lives at `.claude/worktrees/<slug>`, so the conventional relative `../magic` resolves to `.claude/worktrees/magic` and version solving fails on the first path dependency. That failure is loud, unlike the one above it.
 - Land the work as a PR. A suite that only ran on one machine is not evidence.
 
 ## Verifying a change
@@ -69,6 +70,7 @@ This file is canonical. Everything else either points at it or is generated from
 | `.github/copilot-instructions.md` | generated copy, for Copilot's repo-wide instructions and its PR review bot |
 | `.claude/rules/<topic>.md` | path-scoped rules with `paths:` frontmatter; Claude Code loads one when you touch a matching file |
 | `.github/instructions/<topic>.instructions.md` | generated from those rules with `applyTo:` frontmatter, so Copilot's PR review applies the same rules |
+| `.worktreeinclude` | which gitignored files a new worktree receives, and why each one fails silently without it. Consulted by Claude Code when it creates the worktree, not by `git worktree add` |
 | `docs/verification-loop.md` | how a change is proven: static, visual, and dusk E2E |
 
 Other agent infrastructure: skills under `.claude/skills/` (`frontend-design`, `make-component`, `design-first-workflow`), the `component-visual-reviewer` reviewer under `.claude/agents/`, design-culture references under `docs/design-culture/` (Apple HIG, Material 3, Refactoring UI, WCAG, motion, Wind responsive), and the component inventory at `docs/component-registry.md`. `.mcp.json` wires `./bin/fsa mcp:serve` as a project MCP server, which is the same dusk, telescope and artisan surface `docs/verification-loop.md` drives from the shell, offered as tools instead. That entry is the POSIX shape, since `bin/fsa` is a `sh` script: on Windows, run `dart run :dispatcher mcp:install` to rewrite it into a shape that machine can spawn.
