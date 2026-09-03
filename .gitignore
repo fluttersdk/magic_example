@@ -63,3 +63,8 @@ pubspec_overrides.yaml
 # first `flutter pub get` writes a correct lock against the hosted constraints
 # in pubspec.yaml.
 pubspec.lock
+
+# Worktrees Claude Code creates for parallel sessions and isolated subagents.
+# Only this subdirectory: the rest of `.claude/` is tracked, because the rules
+# under it are part of the repository.
+.claude/worktrees/
