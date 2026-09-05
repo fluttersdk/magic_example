@@ -47,6 +47,9 @@ Follow these steps in order; each one depends on the previous.
    to point at and must resolve every `magic` package from pub.dev via the
    plain `pubspec.yaml` constraints. Deleting it (it is gitignored, so it was
    never committed) is what makes `flutter pub get` resolve purely hosted.
+   `bin/check` guards that file for the workspace case, so once it is gone run
+   the gate as `CHECK_ALLOW_HOSTED=1 bin/check`, which is the supported way to
+   say "hosted is what I meant".
 6. **Refresh the preview catalog:** `dart run bin/dispatcher.dart previews:refresh`.
 
 After these six steps, `flutter pub get` should resolve against pub.dev alone,
