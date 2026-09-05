@@ -39,6 +39,17 @@ jobs:
       - name: .github mirrors are current
         run: bin/sync-instructions --check
 
+      # The siblings are not in this checkout, so the script falls back to verifying each copy
+      # against the sha256 it recorded. That catches a hand-edit here and says plainly that
+      # upstream freshness was not checked; only a local run with the working trees can do that.
+      - name: Package skill copies are unedited
+        run: bin/sync-skills --check
+
+      # Pure Python over lib/, so it needs no Flutter toolchain and belongs here rather than in
+      # the Flutter job. `bin/check` runs the same assertion locally.
+      - name: Component registry is current
+        run: bin/sync-registry --check
+
   flutter:
     name: Flutter (analyze + test)
     runs-on: ubuntu-latest
