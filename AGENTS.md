@@ -22,7 +22,8 @@ That override file is also why a green local run can be a red CI: with it, this 
 ## One task, one worktree, one PR
 
 - Branch from `main` as `feature/<slug>` or `fix/<slug>`, and work in a worktree under `.claude/worktrees/<slug>`.
-- A fresh worktree lacks three gitignored files it needs in order to run: `pubspec_overrides.yaml`, `backend/.env`, `.artisan/plugins.json`. Two mechanisms copy them from the main worktree and neither covers every path on its own: `.worktreeinclude` runs when Claude Code creates the worktree, `bin/check` on its first run there. Do not hand-author them.
+- A fresh worktree lacks three gitignored files it needs in order to run: `pubspec_overrides.yaml`, `backend/.env`, `.artisan/plugins.json`. Two mechanisms copy them from the main worktree and neither covers every path on its own: `.worktreeinclude` runs when Claude Code creates the worktree, `bin/check` on its first run there. Both carry all three now; `.worktreeinclude` used to carry only the overrides, so the `EnterWorktree` path silently shipped a worktree with no `backend/.env` and no plugin commands. Do not hand-author them.
+- Without `pubspec_overrides.yaml` nothing errors: the siblings resolve from pub.dev and the suite passes against the PUBLISHED packages while the diff under review is of the local ones. `bin/check` refuses rather than measuring the wrong thing.
 - The paths inside `pubspec_overrides.yaml` must be ABSOLUTE. A worktree lives at `.claude/worktrees/<slug>`, so the conventional relative `../magic` resolves to `.claude/worktrees/magic` and version solving fails on the first path dependency. That failure is loud, unlike the one above it.
 - Land the work as a PR. A suite that only ran on one machine is not evidence.
 
@@ -30,9 +31,13 @@ That override file is also why a green local run can be a red CI: with it, this 
 
 `bin/check` is the gate. It fans the suites out across cores and prints one line per job:
 
-- `bin/check` runs `flutter analyze`, `flutter test`, `pint --test`, and the PHP suite.
+- `bin/check` runs `flutter analyze`, the design-token scan, the component-registry check, `flutter test`, `pint --test`, and the PHP suite.
 - `bin/check --fast` runs only the static passes.
 - `bin/check flutter|backend` scopes it to one half.
+
+Two gates are NOT in `bin/check`: the `.github/` instruction mirrors and the package skill copies are checked by CI, so a stale one passes locally and blocks the merge there. Run `bin/sync-instructions` after editing AGENTS.md or a rule, and `bin/sync-skills` after pulling a sibling package.
+
+A `.php` file Claude writes is linted at that moment by a `PostToolUse` hook (`.claude/hooks/lint-changed.sh`), which reports a `pint --test` failure back into the session instead of letting it cost a CI round. It is registered in `.claude/settings.json` rather than `settings.local.json`, because the latter is gitignored and a worktree would therefore never have it. The hook exits silently when `backend/vendor/` is absent, which is a real state in a fresh clone rather than a fault.
 
 A green suite is the floor, not the finish line. Anything a person clicks gets driven for real with `fluttersdk_dusk` against a running Chrome, at desktop and at mobile width both, because the shell swaps widget trees at `lg` (1024px) and each side can break alone. `docs/verification-loop.md` is the procedure: the three layers, how to boot the app, how to resize a viewport correctly, and the measurement traps that produce confident wrong answers.
 
@@ -43,7 +48,7 @@ A green suite is the floor, not the finish line. Anything a person clicks gets d
 
 ## Off-limits
 
-- Generated files are regenerated, never edited: `lib/config/wind_theme.g.dart` (`design:sync`), `lib/preview/_previews.g.dart` (`previews:refresh`), `lib/app/commands/_index.g.dart` (`commands:refresh`), `.artisan/plugins.json`, and everything `bin/sync-instructions` writes under `.github/`.
+- Generated files are regenerated, never edited: `docs/component-registry.md` (`bin/sync-registry`), `.github/skills/{magic-framework,wind-ui}/SKILL.md` (`bin/sync-skills`, each carrying the hash CI checks it against), `lib/config/wind_theme.g.dart` (`design:sync`), `lib/preview/_previews.g.dart` (`previews:refresh`), `lib/app/commands/_index.g.dart` (`commands:refresh`), `.artisan/plugins.json`, and everything `bin/sync-instructions` writes under `.github/`.
 - `backend/vendor/`, `build/`, `.dart_tool/`.
 - The fluttersdk packages are separate repositories. Reading them is expected; changing one is a PR in that repo under its own rules. `design:sync`, `design:lint`, `make:component`, and `previews:refresh` are `magic`'s commands, not this project's, and there is no `magic_example:artisan`.
 
