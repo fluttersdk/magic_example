@@ -31,7 +31,7 @@ That override file is also why a green local run can be a red CI: with it, this 
 
 `bin/check` is the gate. It fans the suites out across cores and prints one line per job:
 
-- `bin/check` runs `flutter analyze`, the design-token scan, the component-registry check, `flutter test`, `pint --test`, and the PHP suite.
+- `bin/check` runs `flutter analyze`, the design-token scan, the component-registry check, the overrides-parser shape table, `flutter test`, `pint --test`, and the PHP suite.
 - `bin/check --fast` runs only the static passes.
 - `bin/check flutter|backend` scopes it to one half.
 
