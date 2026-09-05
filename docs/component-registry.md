@@ -27,9 +27,9 @@ grow.
 
 | Folder | Class | Variant enums | Recipe | Preview | index.dart | What it is |
 |---|---|---|---|---|---|---|
-| `callout/` | `Callout` | CalloutIntent | yes | yes | yes | An inline note with a title and message, tinted by intent. Demonstrates a |
-| `stat_card/` | `StatCard` | - | yes | yes | yes | A generic dashboard stat: a label, a value, and an optional delta line, built |
-| `tag/` | `Tag` | TagIntent, TagSize | yes | yes | yes | A compact pill for category or status labels, demonstrating a two-axis |
+| `callout/` | `Callout` | CalloutIntent | yes | yes | yes | An inline note with a title and message, tinted by intent. |
+| `stat_card/` | `StatCard` | - | yes | yes | yes | A generic dashboard stat: a label, a value, and an optional delta line, built from semantic alias tokens. |
+| `tag/` | `Tag` | TagIntent, TagSize | yes | yes | yes | A compact pill for category or status labels, demonstrating a two-axis [WindRecipe] (intent x size). |
 
 3 components. A bold cell is a rule violation rather than a note:
 `.claude/rules/design.md` requires exactly one preview per component and an `index.dart`
