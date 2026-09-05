@@ -15,7 +15,21 @@
 # to `.claude/worktrees/magic`, which does not exist, and version solving fails on
 # the first path dependency.
 #
+# The other two fail in their own ways, neither of which names the missing file:
+# without `backend/.env` artisan aborts before it says why, and without
+# `.artisan/plugins.json` every plugin command disappears from `./bin/fsa`. They were
+# listed in `bin/check` and not here, so a worktree Claude Code created got the
+# overrides and neither of them, which is the half AGENTS.md already claimed was
+# covered.
+#
+# The root `.env` is deliberately absent from this list: it is COMMITTED rather than
+# gitignored, because it is a bundled pubspec asset and a missing asset fails
+# `flutter build`. A tracked file is in the worktree already, and the copier only
+# handles gitignored ones.
+#
 # NOT processed when a WorktreeCreate hook replaces the default git logic; such a
 # hook has to copy these itself.
 
 pubspec_overrides.yaml
+backend/.env
+.artisan/plugins.json
