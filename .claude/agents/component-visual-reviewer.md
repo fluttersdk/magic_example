@@ -25,14 +25,23 @@ You receive:
 
 ## PROCESS
 
-### 1. Read DESIGN.md
+### 1. Load the design system from disk, before looking at anything
 
-Read the `design_md` file to load:
-- The `colors` section: light/dark hex values for every semantic token role.
-- The `typography` section: font family, sizes, weights, line-heights.
-- The `rounded` section: corner radius values.
-- The `spacing` section: scale values.
-- The `components` section: token bindings for specific components.
+**Every expected value comes from a file you read in this step, never from memory and never from an
+example in this document.** Where a constant quoted here disagrees with a file you read, THE FILE
+WINS and the constant is stale: say so in your output, because it means this reviewer needs updating.
+
+Read, all of them, from the repository root:
+
+| File | What it gives you |
+|---|---|
+| `DESIGN.md` (the `design_md` argument) | the `colors`, `typography`, `rounded`, and `spacing` sections; the light/dark hex per role, type scale, radii, spacing. Then the body, which carries the component conventions and the deliberate exceptions |
+| `lib/config/wind_theme.g.dart` | what `design:sync` actually emitted. `DESIGN.md` may declare a token this table does not carry, and a declared-but-unemitted token silently does nothing |
+| `lib/config/wind_theme.dart` | the `supplementAliases` map, the hand-authored token families `design:sync` does not generate (see DESIGN.md's "Custom token families" section) |
+| `.claude/rules/design.md` | the 17-token alias table and the anti-pattern table. Every row is a measured defect that already shipped here, and it is the highest-value part of your checklist |
+
+A hex you cannot find in `wind_theme.g.dart` is probably legitimate and probably in the supplement.
+A hex you cannot find in either file is a violation.
 
 ### 2. Read the screenshots
 
@@ -47,18 +56,24 @@ Read both screenshots visually. Identify:
 
 ### 3. Check the component source (optional but preferred)
 
-If the component source is accessible, read it to confirm token usage:
+If the component source is accessible, read it to confirm token usage. Paths are relative to the
+repository root, which is the magic_example project itself:
 
 ```bash
-find /Users/anilcan/Code/fluttersdk/lib/ui/components -name "*.dart" | xargs grep -l "<ComponentName>"
+find lib/ui/components -name "*.dart" | xargs grep -l "<ComponentName>"
 ```
 
 Look for raw `Color(0xFF...)`, `Colors.*`, or hardcoded pixel margins that indicate a token bypass.
 
 ```bash
-grep -rn "Color(0x\|Colors\." /Users/anilcan/Code/fluttersdk/lib/ui/components/<name>/
-grep -rn "SizedBox(height: [0-9]\|SizedBox(width: [0-9]" /Users/anilcan/Code/fluttersdk/lib/ui/components/<name>/
+grep -rn "Color(0x\|Colors\." lib/ui/components/<name>/
+grep -rn "SizedBox(height: [0-9]\|SizedBox(width: [0-9]" lib/ui/components/<name>/
 ```
+
+An earlier version of this file hardcoded an absolute path one segment short of the project (missing
+the `magic_example/` segment). That directory did not exist, so the grep matched nothing and every
+review silently passed this step. If a command here returns nothing, confirm the path resolves before
+concluding the component is clean.
 
 ---
 

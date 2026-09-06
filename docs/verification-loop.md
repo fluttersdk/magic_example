@@ -128,9 +128,53 @@ keeps laying out at the old width, and everything renders doubled and clipped.
   whole page, so an overlap check reads true on every page including unchanged
   ones. Look at the screenshot.
 
+## 4. Reading a system that is already running
+
+The three layers above run locally against code you just wrote, and they fail
+loudly. Answering a question about a system that is ALREADY running, whether in
+production or in a live local stack, fails quietly instead: nothing goes red, you
+get a number, and the number is wrong. Rule the harness out before filing a defect.
+
+- **Read the identifier, never guess it.** A field or translation key that looks
+  right by naming convention is not the same as one you confirmed exists. A missing
+  column reads back as null and a missing translation key echoes itself, and
+  neither is distinguishable from genuinely empty data. Confirm the identifier
+  against the schema or the source file, not against what the name implies.
+- **Take a before/after boundary from the artifact, not from your estimate of when
+  you acted.** A count bounded by "the N minutes since I made the change" can
+  include events that happened before the fix actually landed; a file's own
+  modification time is the real boundary.
+- **The machine's clock and the app's clock can disagree.** A server running on
+  local time beside an app running on UTC (or the reverse) makes a timestamp
+  comparison read as hours of downtime when it is minutes of clock skew. Print
+  both clocks in the same command before drawing a conclusion from a timestamp.
+- **A count command's exit status can look like failure when the count is a
+  correct zero.** `grep -c` exits non-zero on a zero count, and a fallback
+  triggered by that exit code masks a genuine, correct measurement.
+- **A value assembled once and cached does not pick up a later change to the
+  thing it was built from.** A rendered string or composed view built before a
+  locale switch, a config change, or a data update stays stale until it is
+  rebuilt; rebuild the artifact fresh before concluding a change did not take
+  effect.
+- **Reading a value at the wrong point in a request pipeline attributes to the
+  app what a layer in front of it did.** A header or scheme set by a reverse
+  proxy, read by hitting the app server directly instead of through the proxy,
+  reads as unset or wrong.
+- **A 404 is not a regression until the route is confirmed to exist right now**,
+  not from memory of when it was added.
+- **A single timeout is not evidence of a wall.** When a system enforces a
+  shared budget across retries, a later call inheriting a smaller remaining
+  budget is not evidence of new instability. Repeat the measurement before
+  concluding anything from one slow or failed call.
+
 ## What counts as evidence
 
 A claim needs the artifact behind it: the `bin/check` summary, the screenshot pair,
 the snapshot or the response body. "Should work" and "green locally" are not
 evidence, and neither is a passing test that could not have failed. Screenshots and
 snapshots go under `.ac/evidence/`.
+
+A claim about a running system needs one thing more: the reading has to survive
+section 4. A count is only evidence once its boundary comes from the artifact, an
+identifier only once it was read rather than guessed, and a single timeout is
+never evidence of a wall.
