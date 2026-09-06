@@ -363,6 +363,46 @@ void main() {
       );
     });
 
+    test('a file matched by two generators keeps both rewrites', () async {
+      // lib/main.dart is the one path the identity rules and the Dart-import
+      // scan can both claim: it carries the MagicApplication title AND, in a
+      // fork that self-imports, a `package:<name>/` line. THIS repo escapes the
+      // collision only because its own main.dart imports relatively, so the
+      // fixture has to introduce the self-import to reach the case a fork hits.
+      //
+      // Before the plan merged rewrites by path, the second entry re-read the
+      // file from disk and `_apply` wrote it last, so the import rewrite landed
+      // and the title rewrite was discarded while the report still counted the
+      // file as changed.
+      final root = fixture();
+      final main = File('${root.path}/lib/main.dart');
+      main.writeAsStringSync(
+        "import 'package:magic_example/config/app.dart';\n"
+        "${main.readAsStringSync()}",
+      );
+
+      final result = await _run(
+        root,
+        name: 'acme_app',
+        org: 'com.acme',
+        display: 'Acme App',
+      );
+      expect(result.code, 0);
+
+      final rewritten = main.readAsStringSync();
+      expect(
+        rewritten,
+        contains("import 'package:acme_app/config/app.dart';"),
+        reason: 'the package import was not rewritten',
+      );
+      expect(
+        rewritten,
+        contains("MagicApplication(title: 'Acme App'"),
+        reason: 'the display-name rewrite was discarded by the import rewrite',
+      );
+      expect(rewritten, isNot(contains('magic_example')));
+    });
+
     test('rewrites the macOS RunnerTests host application', () async {
       // TEST_HOST is the only functional line in the macOS project file. Left
       // stale it points at a bundle the renamed fork no longer produces, and

@@ -162,13 +162,25 @@ jobs:
         run: flutter analyze
       # `flutter pub get` exits 0 on a downgrade as long as SOME version in the
       # constraint range resolves; it does not care which one. Reading the lock's
-      # own hosted version is the only way to tell alpha.26 (intended) apart from
-      # alpha.24 (the silent walk-back this job exists to catch).
-      - name: Assert magic_starter resolved to the intended release
+      # own hosted version is the only way to tell the intended release apart
+      # from a silent walk-back to an older prerelease, which is what this repo
+      # shipped for several releases: a `magic_notifications` constraint stopped
+      # intersecting the starter's own requirement and pub quietly chose
+      # alpha.24 instead of failing.
+      #
+      # The floor is READ from pubspec.yaml rather than written here. A literal
+      # would turn this job red on the next routine bump, in a file whose author
+      # has no reason to look, and the failure would name a version nobody typed.
+      - name: Assert magic_starter did not resolve below its constraint floor
         run: |
+          floor=$(grep -E '^[[:space:]]+magic_starter:' pubspec.yaml | sed -E 's/.*\^//')
           resolved=$(awk '/^  magic_starter:/{f=1; next} f && /^    version:/{print $2; exit} f && /^  [a-zA-Z]/{exit}' pubspec.lock | tr -d '"')
-          echo "resolved magic_starter version: ${resolved:-<not found>}"
-          if [ "$resolved" != "0.0.1-alpha.26" ]; then
-            echo "expected magic_starter 0.0.1-alpha.26, got '${resolved:-<not found>}'. A hosted resolve that lands on an older prerelease (alpha.24, measured before Step 1) means a dependency constraint stopped intersecting alpha.26's own requirements while pub get kept exiting 0." >&2
+          echo "constraint floor: ${floor:-<not found>} | resolved: ${resolved:-<not found>}"
+          if [ -z "$floor" ] || [ -z "$resolved" ]; then
+            echo "could not read the floor from pubspec.yaml or the version from pubspec.lock; the assertion below would pass vacuously" >&2
+            exit 1
+          fi
+          if [ "$(printf '%s\n%s\n' "$floor" "$resolved" | sort -V | head -1)" != "$floor" ]; then
+            echo "magic_starter resolved to '$resolved', which is BELOW the '$floor' floor in pubspec.yaml. Some constraint stopped intersecting what that release requires, and pub picked an older one rather than failing." >&2
             exit 1
           fi

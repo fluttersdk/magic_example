@@ -303,10 +303,25 @@ class AppRenameCommand extends ArtisanCommand {
     final unchanged = <String>[];
     final absent = <String>[];
 
+    // Merge by path before planning, because the two generators overlap and the
+    // loop below re-reads each path from DISK. `lib/main.dart` carries an
+    // identity rule (the MagicApplication title) and is also scanned for a
+    // `package:` self-import, so in a fork that has one it appears twice; the
+    // second pass would start from the original source again and `_apply` would
+    // write it last, discarding the title rewrite while the report still listed
+    // the file as changed. This repository cannot reach that case, since its
+    // own `main.dart` imports relatively, which is exactly why it needs to be
+    // structural rather than left to a test fixture that mirrors this tree.
+    final merged = <String, List<_Rule>>{};
     for (final rewrite in [
       ..._identityRewrites(from, to),
       ..._dartImportRewrites(from, to),
     ]) {
+      merged.putIfAbsent(rewrite.path, () => <_Rule>[]).addAll(rewrite.rules);
+    }
+
+    for (final entry in merged.entries) {
+      final rewrite = _FileRewrite(entry.key, entry.value);
       final source = _read(rewrite.path);
       if (source == null) {
         absent.add(rewrite.path);
