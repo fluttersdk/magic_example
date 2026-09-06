@@ -57,9 +57,10 @@ pubspec_overrides.yaml
 /REPORT.md
 
 # pubspec.lock IS committed here, reversing this project's earlier policy of
-# ignoring it. That argument was correct about the failure mode (a lock generated with
-# pubspec_overrides.yaml active encodes `path: "../magic"` and friends, paths
-# that do not exist in a fork) but drew the wrong conclusion from it: the fix
+# ignoring it. That argument was correct about the failure mode (a lock generated
+# with pubspec_overrides.yaml active encodes `source: path` entries carrying the
+# ABSOLUTE sibling paths that file holds, which exist on exactly one machine)
+# but drew the wrong conclusion from it: the fix
 # for a lock generated the WRONG way is to generate it the right way, not to
 # stop tracking it and hand every fork a first build that resolves whatever
 # the caret ranges in pubspec.yaml happen to solve to on the day it is cloned

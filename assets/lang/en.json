@@ -91,6 +91,10 @@
     "privacy_policy": "Privacy Policy",
     "legal_and": "and"
   },
+  "dashboard": {
+    "loading": "Loading your dashboard...",
+    "welcome_back": "Welcome back, :name"
+  },
   "errors": {
     "unexpected": "An unexpected error occurred. Please try again.",
     "network_error": "Network connection failed. Please check your internet connection and try again.",

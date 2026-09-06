@@ -57,12 +57,35 @@ class _DashboardViewState
   /// them sends `?upgrade=Pro` where the catalog expects `pro`.
   static const _demoRequiredPlanLabel = 'Pro';
 
+  /// Shared by the loading and loaded branches so the card cannot drift.
+  ///
+  /// These were duplicated inline in both builders and already differed by
+  /// indentation, which means the two strings were not even byte-identical:
+  /// wind collapses the whitespace so they rendered the same, and a change to
+  /// one would have silently stopped matching the other.
+  static const String _cardClass = '''
+    rounded-2xl bg-surface-container
+    border border-color-border
+    p-6 lg:p-8 flex flex-col items-center
+  ''';
+
+  static const String _heroClass = '''
+    w-20 h-20 rounded-2xl
+    flex items-center justify-center
+    bg-primary
+  ''';
+
+  static const Widget _hero = WDiv(
+    className: _heroClass,
+    child: WIcon(_iconHero, className: 'text-4xl text-on-primary'),
+  );
+
   @override
   void initState() {
     // Registers the controller before the base class resolves it, matching
     // the canonical pairing (see DashboardController's docblock): this view
     // is the controller's only backer, so nothing else would ever create it.
-    Magic.findOrPut(DashboardController.new);
+    DashboardController.instance;
     super.initState();
   }
 
@@ -85,23 +108,12 @@ class _DashboardViewState
   /// once the name lands; only the hero icon and a status line render.
   Widget _buildSkeleton() {
     return WDiv(
-      className: '''
-        rounded-2xl bg-surface-container
-        border border-color-border
-        p-6 lg:p-8 flex flex-col items-center
-      ''',
+      className: _cardClass,
       children: [
-        WDiv(
-          className: '''
-            w-20 h-20 rounded-2xl
-            flex items-center justify-center
-            bg-primary
-          ''',
-          child: const WIcon(_iconHero, className: 'text-4xl text-on-primary'),
-        ),
+        _hero,
         const WSpacer(className: 'h-6'),
-        const MSTypography(
-          'Loading your dashboard...',
+        MSTypography(
+          trans('dashboard.loading'),
           variant: TypographyVariant.caption,
         ),
       ],
@@ -111,21 +123,10 @@ class _DashboardViewState
   /// The card's content once [DashboardController] has resolved a greeting.
   Widget _buildLoaded({required String appName, required String greetingName}) {
     return WDiv(
-      className: '''
-          rounded-2xl bg-surface-container
-          border border-color-border
-          p-6 lg:p-8 flex flex-col items-center
-        ''',
+      className: _cardClass,
       children: [
         // 1. Hero.
-        WDiv(
-          className: '''
-              w-20 h-20 rounded-2xl
-              flex items-center justify-center
-              bg-primary
-            ''',
-          child: const WIcon(_iconHero, className: 'text-4xl text-on-primary'),
-        ),
+        _hero,
         const WSpacer(className: 'h-6'),
         MSTypography(
           appName,
@@ -134,7 +135,7 @@ class _DashboardViewState
         ),
         const WSpacer(className: 'h-2'),
         MSTypography(
-          'Welcome back, $greetingName',
+          trans('dashboard.welcome_back', {'name': greetingName}),
           variant: TypographyVariant.caption,
         ),
 

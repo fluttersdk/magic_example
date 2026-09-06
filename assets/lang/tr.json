@@ -91,6 +91,10 @@
     "privacy_policy": "Gizlilik Politikası",
     "legal_and": "ve"
   },
+  "dashboard": {
+    "loading": "Panonuz yükleniyor...",
+    "welcome_back": "Tekrar hoş geldiniz, :name"
+  },
   "errors": {
     "unexpected": "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
     "network_error": "Ağ bağlantısı başarısız oldu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.",

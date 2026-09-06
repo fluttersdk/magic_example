@@ -328,6 +328,60 @@ void main() {
       expect(second.output, contains('changed (0)'));
       expect(_snapshot(root), afterFirst);
     });
+
+    test('a new display name containing the old one applies exactly once', () async {
+      // The hazard the DESIGN.md prose rule is ordered against: that rule is
+      // the one unanchored rewrite in the set, so with the rules in the
+      // obvious order "Magic Example" to "Magic Example Deluxe" rewrites the
+      // already-correct frontmatter a second time and yields
+      // "Magic Example Deluxe Deluxe". Nothing else exercised it.
+      final root = fixture();
+
+      final result = await _run(root, display: 'Magic Example Deluxe');
+
+      expect(result.code, 0);
+      final design = File('${root.path}/DESIGN.md').readAsStringSync();
+      expect(design, contains('Magic Example Deluxe'));
+      expect(design, isNot(contains('Magic Example Deluxe Deluxe')));
+      expect(design, isNot(contains('Deluxe Deluxe')));
+    });
+
+    test('runs with --display alone, leaving package and org untouched', () async {
+      // The likeliest fork invocation after the first rename, and the case
+      // where `from.package == to.package`, so every package-keyed rule must
+      // be a no-op rather than a rewrite-to-itself that reports a change.
+      final root = fixture();
+      final pubspecBefore = File('${root.path}/pubspec.yaml').readAsStringSync();
+
+      final result = await _run(root, display: 'Acme App');
+
+      expect(result.code, 0);
+      expect(File('${root.path}/pubspec.yaml').readAsStringSync(), pubspecBefore);
+      expect(
+        File('${root.path}/android/app/build.gradle.kts').readAsStringSync(),
+        contains('com.fluttersdk.magic_example'),
+      );
+    });
+
+    test('rewrites the macOS RunnerTests host application', () async {
+      // TEST_HOST is the only functional line in the macOS project file. Left
+      // stale it points at a bundle the renamed fork no longer produces, and
+      // the RunnerTests target cannot launch. The assertion covers both
+      // occurrences of the package inside the value, not just the .app.
+      final root = fixture();
+
+      await _run(root, name: 'acme_app', org: 'com.acme', display: 'Acme App');
+
+      final pbx = File(
+        '${root.path}/macos/Runner.xcodeproj/project.pbxproj',
+      ).readAsStringSync();
+      expect(pbx, contains(r'TEST_HOST = "$(BUILT_PRODUCTS_DIR)/acme_app.app/'));
+      expect(pbx, isNot(contains(r'/magic_example.app/')));
+      expect(
+        pbx,
+        isNot(contains(r'$(BUNDLE_EXECUTABLE_FOLDER_PATH)/magic_example"')),
+      );
+    });
   });
 
   group('app:rename refusals', () {

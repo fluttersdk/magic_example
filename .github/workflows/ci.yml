@@ -60,6 +60,19 @@ jobs:
         with:
           channel: stable
           cache: true
+      # bin/check's run_lockfile never runs in CI, because CI does not invoke
+      # bin/check at all: it runs the individual tools. Without this step the
+      # only thing standing between a path-poisoned lock and main is whether a
+      # developer chose to run the gate locally, and the symptom in CI would be
+      # a pub resolution error naming a directory nobody recognises. Before
+      # `flutter pub get`, since that would rewrite the evidence.
+      - name: Committed lock is hosted-only
+        run: |
+          if grep -qE 'source: (path|git)' pubspec.lock; then
+            echo "pubspec.lock carries local sibling paths. Regenerate it with pubspec_overrides.yaml moved aside." >&2
+            grep -nE 'source: (path|git)' pubspec.lock >&2
+            exit 1
+          fi
       - name: Resolve dependencies
         run: flutter pub get
       - name: Analyze
@@ -137,6 +150,14 @@ jobs:
           cache: true
       - name: Resolve against pub.dev
         run: flutter pub get
+      # The lock is TRACKED, so a resolve that rewrites it means the committed
+      # lock disagreed with pubspec.yaml. CI would otherwise repair that in
+      # place and inspect the repaired copy, so the drift never surfaces and a
+      # fork keeps cloning a lock nothing has verified. bin/check's run_lockfile
+      # cannot see this: it reads the index on a developer's machine, and there
+      # is no index here.
+      - name: Assert the committed lock matches what pub.dev resolves
+        run: git diff --exit-code -- pubspec.lock
       - name: Analyze against the published siblings
         run: flutter analyze
       # `flutter pub get` exits 0 on a downgrade as long as SOME version in the

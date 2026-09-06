@@ -29,14 +29,18 @@ anything. It refuses to run while writing against a dirty worktree, and
 running it twice with the same arguments is a no-op.
 
 It owns every identity site measured in this app: the Dart package name and
-its five `import 'package:magic_example/...'` sites; the Android namespace,
+every `import 'package:magic_example/...'` site under `lib/`, `test/` and
+`bin/`; the Android namespace,
 `applicationId`, display name, and the Kotlin package directory move
 (`android/app/src/main/kotlin/com/fluttersdk/magic_example/` moves to the new
 package path); the iOS bundle identifier and display name in `project.pbxproj`
 and `Info.plist`; the macOS bundle identifier and display name across
-`AppInfo.xcconfig`, `project.pbxproj`, and `Runner.xcscheme` (macOS's own
+`AppInfo.xcconfig`, `project.pbxproj`, and `Runner.xcscheme`, plus the
+`TEST_HOST` the macOS `RunnerTests` target launches against (macOS's own
 `Info.plist` needs no edit, it reads `$(PRODUCT_BUNDLE_IDENTIFIER)` and
-`$(PRODUCT_NAME)`); the Windows `CMakeLists.txt`, `Runner.rc`, and `main.cpp`;
+`$(PRODUCT_NAME)`; three product-reference labels in
+`macos/.../project.pbxproj` keep the old name and are cosmetic, Xcode
+regenerates them); the Windows `CMakeLists.txt`, `Runner.rc`, and `main.cpp`;
 the Linux `CMakeLists.txt` and `my_application.cc`; the web `manifest.json`
 and `index.html` title; the `APP_NAME` key in `.env` (not its values, see step
 2); `lib/main.dart`; the app name reference in `DESIGN.md` (not its tokens,
@@ -46,7 +50,7 @@ see step 4); and `.github/dependabot.yml`.
 
 `app:rename` only rewrites the `APP_NAME` key; it does not touch `API_URL` or
 any other value. Point `API_URL` at the new backend, then run
-`magic key:generate` if the app uses the `Crypt` facade. `.env` is COMMITTED
+`dart run bin/dispatcher.dart key:generate` if the app uses the `Crypt` facade. `.env` is COMMITTED
 here and bundled as a Flutter asset in `pubspec.yaml`, which is deliberate on
 both counts: `flutter_dotenv` can only load it on web when it is a bundled
 asset, and a bundled asset that does not exist fails `flutter build`, so

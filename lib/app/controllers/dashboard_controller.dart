@@ -30,12 +30,18 @@ import '../models/user.dart';
 /// This boilerplate ships no dashboard endpoint, so there is no network call
 /// to await. The single `await` in [load] is not a `Future.delayed` standing
 /// in for one: it is the same yield every other controller in this codebase
-/// gets for free from its first `await Http.get(...)`, kept here so
-/// [resetForSession]'s clear-then-refetch contract is real (the view actually
-/// paints the cleared state before the refetch lands) rather than a same-tick
-/// no-op indistinguishable from skipping the interface entirely. A fork
-/// wiring a real fetch (a `/dashboard` summary, say) replaces the body of
-/// [load] without touching [onInit] or [resetForSession].
+/// gets for free from its first `await Http.get(...)`, kept so the shape a
+/// fork copies is the shape a real fetch needs.
+///
+/// Be precise about what that yield does and does not buy, because the first
+/// version of this docblock overclaimed it. Awaiting an already-completed
+/// future resumes on the MICROTASK queue, and microtasks drain before the
+/// scheduler paints, so no frame is ever rendered between [setEmpty] and
+/// [setSuccess] on the [resetForSession] path. The yield orders the two
+/// notifications; it does not produce a visible cleared state. With a real
+/// `await Http.get(...)` in [load] that changes on its own, because a network
+/// round trip does cross a frame boundary. A fork wiring a real fetch
+/// replaces the body of [load] without touching [onInit] or [resetForSession].
 class DashboardController extends MagicController
     with MagicStateMixin<String>
     implements SessionScopedController {
@@ -72,7 +78,7 @@ class DashboardController extends MagicController
   /// resolves, which is exactly the wrong default across an identity change.
   @override
   Future<void> resetForSession() async {
-    setState(null, status: const RxStatus.empty());
+    setEmpty();
     await load();
   }
 }

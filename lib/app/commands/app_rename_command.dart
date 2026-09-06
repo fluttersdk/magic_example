@@ -40,7 +40,14 @@ class AppRenameCommand extends ArtisanCommand {
   /// title, three C string literals and a single-quoted Dart literal. The
   /// rejected characters are exactly the ones that would break out of one of
   /// those quoting contexts.
-  static final RegExp _displayPattern = RegExp(r'''^[^"'\\<>&$\r\n]+$''');
+  /// `#` and a tab are here for a different reason than the quoting
+  /// metacharacters: they do not break a literal, they get EATEN. The display
+  /// name is written unquoted into `.env`, and `flutter_dotenv` strips
+  /// `#[^'"]*$` as a trailing comment, so `--display="Acme #1"` leaves the
+  /// running app reading `Acme` while this command's own re-read of `.env`
+  /// still sees the whole string, which breaks idempotency silently. A tab
+  /// does the same to the JSON string in `web/manifest.json`.
+  static final RegExp _displayPattern = RegExp(r'''^[^"'\\<>&$#\t\r\n]+$''');
 
   @override
   String get signature =>
@@ -103,6 +110,30 @@ class AppRenameCommand extends ArtisanCommand {
     //    on an already-renamed fork.
     final _Identity? current = _readCurrentIdentity(ctx);
     if (current == null) return 1;
+
+    // The CURRENT identity is read out of the tree, so it is no more trusted
+    // than the flags above: it reaches `kotlinPath`, and from there a read, a
+    // write and a `deleteSync(recursive: true)`. `org` survives a hostile value
+    // because `kotlinPath` splits it on `.`, but `package` is appended whole,
+    // so a `pubspec.yaml` carrying `name: ../../../tmp/x` with a matching
+    // gradle namespace would build a move endpoint outside the project. Held to
+    // the same patterns rather than trusted for having come off disk.
+    if (!_namePattern.hasMatch(current.package)) {
+      ctx.output.error(
+        'app:rename refused the package name it read from pubspec.yaml '
+        '("${current.package}"): it must match ${_namePattern.pattern}. '
+        'This value becomes a Kotlin package directory.',
+      );
+      return 1;
+    }
+    if (!_orgPattern.hasMatch(current.org)) {
+      ctx.output.error(
+        'app:rename refused the org it read from android/app/build.gradle.kts '
+        '("${current.org}"): it must match ${_orgPattern.pattern}. '
+        'Every segment becomes a Kotlin package directory level.',
+      );
+      return 1;
+    }
 
     final target = _Identity(
       package: name ?? current.package,
@@ -427,6 +458,23 @@ class AppRenameCommand extends ArtisanCommand {
           RegExp('PRODUCT_BUNDLE_IDENTIFIER = $oldAppleId([^;\n]*);'),
           (m) => 'PRODUCT_BUNDLE_IDENTIFIER = ${to.appleId}${m[1]};',
         ),
+        // The RunnerTests target's host application, and the one line in this
+        // file that is functional rather than cosmetic: leave it and a renamed
+        // fork's macOS test target cannot launch, because it looks for a bundle
+        // no longer produced. Anchored on the setting name AND the current
+        // value, the same shape as the bundle-id rule above, so it cannot
+        // touch an object id or a comment. There is no iOS counterpart on
+        // purpose: `ios/.../project.pbxproj` names `Runner.app` there, which is
+        // not the package name and does not move.
+        _Rule(
+          RegExp(
+            'TEST_HOST = "\\\$\\(BUILT_PRODUCTS_DIR\\)/'
+            '${RegExp.escape(from.package)}\\.app/([^"]*)"',
+          ),
+          (m) =>
+              'TEST_HOST = "\$(BUILT_PRODUCTS_DIR)/${to.package}.app/'
+              '${m[1]!.replaceAll(from.package, to.package)}"',
+        ),
       ]),
       _FileRewrite(
         'macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme',
@@ -600,9 +648,12 @@ class AppRenameCommand extends ArtisanCommand {
     out.writeln('not owned by app:rename, do these by hand:');
     out.writeln('  - launcher icons on every platform');
     out.writeln(
-      '  - macos/Runner.xcodeproj/project.pbxproj product references and '
-      'TEST_HOST still name "${from.package}.app"; only anchored '
-      'PRODUCT_BUNDLE_IDENTIFIER lines are rewritten there',
+      '  - macos/Runner.xcodeproj/project.pbxproj still names '
+      '"${from.package}.app" in its PBXFileReference and group entries, which '
+      'are cosmetic labels Xcode regenerates. TEST_HOST and the bundle ids ARE '
+      'rewritten, so the RunnerTests target still launches; `flutter build '
+      'macos` was never affected either way, since the shell phase derives the '
+      'app filename from \$PRODUCT_NAME at build time',
     );
     out.writeln('  - README.md and AGENTS.md prose');
     out.writeln(
@@ -624,9 +675,26 @@ class AppRenameCommand extends ArtisanCommand {
       final destination = Directory(_absolute(move.destination));
       destination.createSync(recursive: true);
       for (final entity in source.listSync()) {
-        if (entity is! File) continue;
         final name = _relative(entity.path).split('/').last;
-        entity.renameSync('${destination.path}/$name');
+        final String into = '${destination.path}/$name';
+        // Subdirectories move too. This loop used to skip every non-File and
+        // the `deleteSync(recursive: true)` below then destroyed what it
+        // skipped, silently. The boilerplate's own package holds only
+        // MainActivity.kt so nothing here could catch it, but a fork with a
+        // real Android package almost certainly has subpackages
+        // (`receivers/`, `workers/`), and losing them to a rename is not a
+        // failure anyone would connect back to this command.
+        if (entity is File) {
+          entity.renameSync(into);
+        } else if (entity is Directory) {
+          entity.renameSync(into);
+        } else {
+          throw StateError(
+            'app:rename found ${entity.runtimeType} at ${entity.path} inside '
+            'the Kotlin package directory and will not move it. Move or '
+            'remove it by hand, then re-run.',
+          );
+        }
       }
       source.deleteSync(recursive: true);
       _pruneEmptyParents(source.parent, 'android/app/src/main/kotlin');

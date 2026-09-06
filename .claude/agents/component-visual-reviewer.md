@@ -18,7 +18,7 @@ You receive:
 
 - `screenshot_light`: path to a JPEG/PNG screenshot of the component in light mode
 - `screenshot_dark`: path to a JPEG/PNG screenshot of the component in dark mode
-- `design_md`: path to the DESIGN.md file (default: `magic_example/DESIGN.md`)
+- `design_md`: path to the DESIGN.md file (default: `DESIGN.md`, repo-relative like every other path in this file)
 - `component`: name of the component or screen being reviewed
 
 ---

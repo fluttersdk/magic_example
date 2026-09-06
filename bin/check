@@ -201,11 +201,24 @@ run_lockfile() {
         echo "pubspec.lock is not tracked; commit the hosted-only lock" >&2
         return 1
     }
+    # A positive control before the negative test. `grep -q` exits 1 on EMPTY
+    # input exactly as it does on clean input, so a staged lock that is empty or
+    # truncated would sail through the check below reporting "no local paths".
+    # The whole job of this gate is to notice a bad lock, and a zero-byte one is
+    # the worst kind.
+    if [ "$(printf '%s' "$staged" | grep -c 'sdks:')" -eq 0 ]; then
+        echo "pubspec.lock is staged but carries no 'sdks:' block, so it is empty" >&2
+        echo "or truncated rather than clean. Regenerate it hosted-only." >&2
+        return 1
+    fi
     # `source: path` rather than a relative `path: "../"`. The overrides file holds
     # ABSOLUTE paths on purpose, so a poisoned lock reads `path: "/Users/..."` with
     # `relative: false` and a relative-path pattern would match it zero times. The
     # source line is the categorical test and covers both forms.
-    if printf '%s' "$staged" | grep -q 'source: path'; then
+    # `git` as well as `path`: bin/parse-overrides-test.py:78-91 covers a git
+    # override as a supported shape, and one resolves to `source: git` with a
+    # ref nobody else can fetch, which is the same class of unbuildable lock.
+    if printf '%s' "$staged" | grep -qE 'source: (path|git)'; then
         echo "pubspec.lock encodes local sibling paths. Regenerate it hosted-only:" >&2
         echo "  mv pubspec_overrides.yaml /tmp/ && flutter pub get && git add pubspec.lock" >&2
         echo "  mv /tmp/pubspec_overrides.yaml ." >&2
