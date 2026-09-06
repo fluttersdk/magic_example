@@ -10,21 +10,35 @@ import 'package:magic_starter/magic_starter.dart'
         MSUpgradeNudge,
         UpgradePrompt;
 
+import '../../app/controllers/dashboard_controller.dart';
+
 /// Dashboard view: the default landing page after successful authentication.
 ///
 /// Design-first: every surface and text color flows through the semantic
 /// alias tokens (`bg-surface`, `text-fg`, ...) so it tracks DESIGN.md in both
 /// light and dark. The quick-link tiles compose the shared [MSCard] component.
 ///
+/// Reads the greeting name through [DashboardController], the app's first
+/// controller: the outer card renders the controller's loading state while
+/// the identity resolves and its loaded state once the name is in, rather
+/// than jumping straight to content (see the controller's own docblock for
+/// what "loading" honestly means on a screen with no backend).
+///
 /// The "AI Insights" banner below the quick links is a DEMO of the
 /// [UpgradePrompt] seam, not a real billing integration: a fork with no plan
 /// gating can delete the whole "3. Plan-gate demo" block, and a fork that
 /// does gate features can copy the pattern into a real controller's non-2xx
 /// branch (`UpgradePrompt.showIfGated(response)`).
-class DashboardView extends StatelessWidget {
+class DashboardView extends MagicStatefulView<DashboardController> {
   /// Creates the [DashboardView].
   const DashboardView({super.key});
 
+  @override
+  State<DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState
+    extends MagicStatefulViewState<DashboardController, DashboardView> {
   static const _iconHero = Icons.auto_awesome;
   static const _iconDocs = Icons.menu_book;
   static const _iconGitHub = Icons.code;
@@ -44,111 +58,152 @@ class DashboardView extends StatelessWidget {
   static const _demoRequiredPlanLabel = 'Pro';
 
   @override
+  void initState() {
+    // Registers the controller before the base class resolves it, matching
+    // the canonical pairing (see DashboardController's docblock): this view
+    // is the controller's only backer, so nothing else would ever create it.
+    Magic.findOrPut(DashboardController.new);
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appName = Config.get('app.name', 'My App') ?? 'My App';
 
     return WDiv(
       className: 'w-full max-w-[480px] md:max-w-4xl mx-auto p-4 lg:p-8',
-      child: WDiv(
-        className: '''
+      child: controller.renderState(
+        (name) => _buildLoaded(appName: appName, greetingName: name),
+        onLoading: _buildSkeleton(),
+      ),
+    );
+  }
+
+  /// The card's shape while [DashboardController] resolves the greeting.
+  ///
+  /// Same outer proportions as the loaded card so the layout does not jump
+  /// once the name lands; only the hero icon and a status line render.
+  Widget _buildSkeleton() {
+    return WDiv(
+      className: '''
+        rounded-2xl bg-surface-container
+        border border-color-border
+        p-6 lg:p-8 flex flex-col items-center
+      ''',
+      children: [
+        WDiv(
+          className: '''
+            w-20 h-20 rounded-2xl
+            flex items-center justify-center
+            bg-primary
+          ''',
+          child: const WIcon(_iconHero, className: 'text-4xl text-on-primary'),
+        ),
+        const WSpacer(className: 'h-6'),
+        const MSTypography(
+          'Loading your dashboard...',
+          variant: TypographyVariant.caption,
+        ),
+      ],
+    );
+  }
+
+  /// The card's content once [DashboardController] has resolved a greeting.
+  Widget _buildLoaded({required String appName, required String greetingName}) {
+    return WDiv(
+      className: '''
           rounded-2xl bg-surface-container
           border border-color-border
           p-6 lg:p-8 flex flex-col items-center
         ''',
-        children: [
-          // 1. Hero.
-          WDiv(
-            className: '''
+      children: [
+        // 1. Hero.
+        WDiv(
+          className: '''
               w-20 h-20 rounded-2xl
               flex items-center justify-center
               bg-primary
             ''',
-            child: const WIcon(
-              _iconHero,
-              className: 'text-4xl text-on-primary',
+          child: const WIcon(_iconHero, className: 'text-4xl text-on-primary'),
+        ),
+        const WSpacer(className: 'h-6'),
+        MSTypography(
+          appName,
+          variant: TypographyVariant.h2,
+          className: 'text-center',
+        ),
+        const WSpacer(className: 'h-2'),
+        MSTypography(
+          'Welcome back, $greetingName',
+          variant: TypographyVariant.caption,
+        ),
+
+        const WSpacer(className: 'h-8'),
+
+        // 2. Quick-link cards.
+        WDiv(
+          className: 'w-full grid grid-cols-1 md:grid-cols-3 gap-3',
+          children: [
+            _buildLinkCard(
+              icon: _iconDocs,
+              title: 'Documentation',
+              description: 'Read the Magic Framework docs to get started.',
+              url: 'https://magic.fluttersdk.com',
             ),
-          ),
-          const WSpacer(className: 'h-6'),
-          MSTypography(
-            appName,
-            variant: TypographyVariant.h2,
-            className: 'text-center',
-          ),
-          const WSpacer(className: 'h-2'),
-          const MSTypography(
-            'Built with Magic Starter',
-            variant: TypographyVariant.caption,
-          ),
+            _buildLinkCard(
+              icon: _iconGitHub,
+              title: 'GitHub',
+              description: 'Star the repo, report issues, or contribute code.',
+              url: 'https://github.com/fluttersdk/magic',
+            ),
+            _buildLinkCard(
+              icon: _iconCli,
+              title: 'CLI Commands',
+              description: 'Run `magic --help` to see all available commands.',
+              url: 'https://magic.fluttersdk.com/cli',
+            ),
+          ],
+        ),
 
-          const WSpacer(className: 'h-8'),
+        const WSpacer(className: 'h-8'),
 
-          // 2. Quick-link cards.
-          WDiv(
-            className: 'w-full grid grid-cols-1 md:grid-cols-3 gap-3',
-            children: [
-              _buildLinkCard(
-                icon: _iconDocs,
-                title: 'Documentation',
-                description: 'Read the Magic Framework docs to get started.',
-                url: 'https://magic.fluttersdk.com',
+        // 3. Plan-gate demo: shows the one intended way a gated action is
+        // surfaced (see UpgradePrompt's own docblock), never a bare error
+        // toast. `onUpgrade` calls UpgradePrompt.startUpgrade, which routes to
+        // MagicStarterConfig.billingRoute() with the required tier attached.
+        //
+        // In THIS app that tap does nothing visible: only `/` is registered
+        // (lib/routes/app.dart), the starter ships no billing view, and
+        // magic's router logs "Route not found" and stays put. That is the
+        // honest state of a demo, not a bug: a fork registers its own billing
+        // route (or points magic_starter.routes.billing at one) and the same
+        // call starts working. Display-only otherwise, with no network call
+        // and no fake response, since the point is the wiring.
+        MSUpgradeNudge(
+          message: 'AI-powered insights are available on the Pro plan.',
+          requiredPlan: _demoRequiredPlanLabel,
+          onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlanId),
+        ),
+
+        const WSpacer(className: 'h-8'),
+
+        // 4. Footer.
+        WDiv(
+          className: 'flex flex-row items-center justify-center gap-1',
+          children: [
+            const WText('Made with', className: 'text-xs text-fg-muted'),
+            const WIcon(_iconHeart, className: 'text-xs text-destructive'),
+            const WText('by', className: 'text-xs text-fg-muted'),
+            WAnchor(
+              onTap: () => Launch.url('https://anilcancakir.com'),
+              child: const WText(
+                'Anılcan Çakır',
+                className: 'text-xs font-medium text-fg',
               ),
-              _buildLinkCard(
-                icon: _iconGitHub,
-                title: 'GitHub',
-                description:
-                    'Star the repo, report issues, or contribute code.',
-                url: 'https://github.com/fluttersdk/magic',
-              ),
-              _buildLinkCard(
-                icon: _iconCli,
-                title: 'CLI Commands',
-                description:
-                    'Run `magic --help` to see all available commands.',
-                url: 'https://magic.fluttersdk.com/cli',
-              ),
-            ],
-          ),
-
-          const WSpacer(className: 'h-8'),
-
-          // 3. Plan-gate demo: shows the one intended way a gated action is
-          // surfaced (see UpgradePrompt's own docblock), never a bare error
-          // toast. `onUpgrade` calls UpgradePrompt.startUpgrade, which routes to
-          // MagicStarterConfig.billingRoute() with the required tier attached.
-          //
-          // In THIS app that tap does nothing visible: only `/` is registered
-          // (lib/routes/app.dart), the starter ships no billing view, and
-          // magic's router logs "Route not found" and stays put. That is the
-          // honest state of a demo, not a bug: a fork registers its own billing
-          // route (or points magic_starter.routes.billing at one) and the same
-          // call starts working. Display-only otherwise, with no network call
-          // and no fake response, since the point is the wiring.
-          MSUpgradeNudge(
-            message: 'AI-powered insights are available on the Pro plan.',
-            requiredPlan: _demoRequiredPlanLabel,
-            onUpgrade: () => UpgradePrompt.startUpgrade(_demoRequiredPlanId),
-          ),
-
-          const WSpacer(className: 'h-8'),
-
-          // 4. Footer.
-          WDiv(
-            className: 'flex flex-row items-center justify-center gap-1',
-            children: [
-              const WText('Made with', className: 'text-xs text-fg-muted'),
-              const WIcon(_iconHeart, className: 'text-xs text-destructive'),
-              const WText('by', className: 'text-xs text-fg-muted'),
-              WAnchor(
-                onTap: () => Launch.url('https://anilcancakir.com'),
-                child: const WText(
-                  'Anılcan Çakır',
-                  className: 'text-xs font-medium text-fg',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

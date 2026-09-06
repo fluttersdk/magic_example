@@ -12,14 +12,15 @@ Applies to `lib/` and `test/`. Colours, the component folder contract and the an
 
 `magic-framework` and `wind-ui` define how code on this stack is written, and copies of both sit at `.github/skills/` so a reviewer with only this checkout has them too. Load them before the first line of Dart rather than working from memory. This file does not restate them; it carries what this app does differently, and what has not been built yet.
 
-## No controller and no dedicated view class here yet
+## One controller exists, and it is the one to copy
 
-This boilerplate ships zero files under `lib/app/controllers/` and zero `MagicStatefulView`. `lib/resources/views/dashboard_view.dart` and `welcome_view.dart` are plain `StatelessWidget`, reading config directly (`Config.get('app.name', ...)`) rather than through a `MagicController`. That is a real gap, not a style choice: a screen with a network call, a form, or any state that must reset between logins needs the framework's pattern rather than a hand-rolled `StatefulWidget`, and neither the `magic-framework` skill's shape nor a local instance of it exists in this repo to copy from.
+`lib/app/controllers/dashboard_controller.dart` paired with `lib/resources/views/dashboard_view.dart` is the single worked instance of the framework's controller and view pattern in this repo. Read it before adding a second; its docblock carries the reasoning, not just the shape. `lib/resources/views/welcome_view.dart` is still a plain `StatelessWidget` reading `Config.get('app.name', ...)` directly, which is fine for a screen with no state and no identity in it.
 
-When you add the first one, follow the skill's definition rather than inventing a shape here:
+Follow the skill's definition rather than inventing a shape here:
 
 - A controller is a `MagicController` resolved through a canonical `static X get instance => Magic.findOrPut(X.new);`, notifying through `refreshUI()` rather than calling `notifyListeners()` directly.
 - A view pairs with it as `MagicStatefulView<XController>` / `MagicStatefulViewState`. Do not pass a controller through a view's constructor; nothing then resets it between logins or tests.
+- A controller holding anything that belongs to the current identity implements `SessionScopedController`. `SessionScopeSync.attach()` (`lib/app/providers/app_service_provider.dart:81`) resets every registered one on login and team switch; `onInit` alone cannot cover this, because it runs once per controller lifetime rather than once per session. Skip it and a team switch leaves the previous tenant's data on screen until the app restarts.
 - No app shell under `lib/ui/layouts/`. `lib/routes/app.dart:16` already mounts `magic_starter`'s `layout.app` through `MagicRoute.group(layout: ...)`; a second shell competes with it and decays.
 
 ## Routes register in `boot()`, not `register()`
