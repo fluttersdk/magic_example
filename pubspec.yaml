@@ -77,6 +77,7 @@ flutter:
 
   assets:
     - assets/lang/en.json
+    - assets/lang/tr.json
     # Runtime env. Must be bundled so flutter_dotenv can load it on web;
     # without this the app silently falls back to Env defaults
     # (BROADCAST_CONNECTION=null) and realtime never connects. `.env` is
