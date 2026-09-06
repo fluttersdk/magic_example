@@ -56,13 +56,17 @@ pubspec_overrides.yaml
 # Local QA report (not part of the published example)
 /REPORT.md
 
-# pubspec.lock is NOT committed here, unlike a normal application. This project
-# is a template that gets forked, and its lock can only ever be generated with
-# pubspec_overrides.yaml active, so every committed lock encodes
-# `path: "../magic"` and friends: paths that do not exist in a fork. A fork's
-# first `flutter pub get` writes a correct lock against the hosted constraints
-# in pubspec.yaml.
-pubspec.lock
+# pubspec.lock IS committed here, reversing this project's earlier policy of
+# ignoring it. That argument was correct about the failure mode (a lock generated with
+# pubspec_overrides.yaml active encodes `path: "../magic"` and friends, paths
+# that do not exist in a fork) but drew the wrong conclusion from it: the fix
+# for a lock generated the WRONG way is to generate it the right way, not to
+# stop tracking it and hand every fork a first build that resolves whatever
+# the caret ranges in pubspec.yaml happen to solve to on the day it is cloned
+# rather than what CI actually proved green. `run_lockfile` in bin/check is
+# what makes tracking safe: it fails the STAGED lock when it carries a
+# `source: path` entry, so a lock generated with the overrides live never
+# reaches main.
 
 # Worktrees Claude Code creates for parallel sessions and isolated subagents.
 # Only this subdirectory: the rest of `.claude/` is tracked, because the rules

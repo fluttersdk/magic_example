@@ -67,9 +67,9 @@ idempotent and preserves any other server entry.
 It is committed in the fast shape because that is what the fast path is for:
 measured here, `./bin/fsa list` is 0.63s against 5.21s for
 `dart run :dispatcher list`, and a dusk walk pays that per command rather than
-once. `bin/fsa` keys its build cache on `pubspec.lock`, which this repo does not
-track, so its first run after a clone rebuilds the binary; that clone needs
-`flutter pub get` before either route works, which is already the first step.
+once. `bin/fsa` keys its build cache on `pubspec.lock`, and a fresh clone now
+carries that lock, so the cache key is already correct before the first
+`flutter pub get`, which is still the first step either route needs.
 
 Boot the backend, then the app:
 
