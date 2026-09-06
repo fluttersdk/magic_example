@@ -51,12 +51,15 @@ dependencies:
   cupertino_icons: ^1.0.8
   fluttersdk_artisan: ^0.0.14
 
-  # Pin as a real dependency, not a workspace-only override: magic's own
-  # file_picker constraint (">=11.0.2 <12.0.0-0") already excludes the
-  # 12.0.0-beta prerelease, but a fork resolving purely from pub.dev has no
-  # dependency_overrides safety net, so pin it here too. The beta's non-null
-  # saveFile params break magic.
-  file_picker: ^11.0.2
+  # No file_picker pin here on purpose. Nothing in this app imports it; it
+  # arrives through magic's Pick facade, so magic's own constraint is the only
+  # one that should decide the version. Pinning it here as a second opinion
+  # bought nothing (published magic 0.0.9 already caps it at <12.0.0-0) and
+  # cost real breakage: magic's master moved to ^12.2.0 ahead of a release, and
+  # a pin of ^11.0.2 does not intersect that, so version solving failed outright
+  # against local sibling checkouts and bin/check could not run at all. Leaving
+  # it out means the resolved version follows whichever magic is in play, and
+  # the day magic publishes its file_picker 12 port nothing here needs editing.
 
 dev_dependencies:
   flutter_test:
