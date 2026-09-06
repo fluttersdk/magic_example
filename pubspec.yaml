@@ -35,28 +35,31 @@ dependencies:
   # copied outside this workspace resolves without any sibling checkout.
   # In-workspace development overrides these to local path checkouts via the
   # gitignored pubspec_overrides.yaml; that file never ships in the fork.
-  magic: ^0.0.6
-  magic_deeplink: ^0.0.2
-  magic_notifications: ^0.0.2
-  magic_social_auth: ^0.0.2
-  magic_starter: ^0.0.1-alpha.17
+  magic: ^0.0.9
+  magic_deeplink: ^0.0.3
+  magic_notifications: ^0.2.0
+  magic_social_auth: ^0.0.3
+  magic_starter: ^0.0.1-alpha.26
 
   # Dev-tooling, imported by lib/main.dart under kDebugMode (release tree-shakes).
-  magic_devtools: ^0.0.2
-  fluttersdk_dusk: ^0.0.9
-  fluttersdk_telescope: ^0.0.4
+  magic_devtools: ^0.0.4
+  fluttersdk_dusk: ^0.0.13
+  fluttersdk_telescope: ^0.0.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  fluttersdk_artisan: ^0.0.9
+  fluttersdk_artisan: ^0.0.14
 
-  # Pin as a real dependency, not a workspace-only override: magic's own
-  # file_picker constraint (">=11.0.2 <12.0.0-0") already excludes the
-  # 12.0.0-beta prerelease, but a fork resolving purely from pub.dev has no
-  # dependency_overrides safety net, so pin it here too. The beta's non-null
-  # saveFile params break magic.
-  file_picker: ^11.0.2
+  # No file_picker pin here on purpose. Nothing in this app imports it; it
+  # arrives through magic's Pick facade, so magic's own constraint is the only
+  # one that should decide the version. Pinning it here as a second opinion
+  # bought nothing (published magic 0.0.9 already caps it at <12.0.0-0) and
+  # cost real breakage: magic's master moved to ^12.2.0 ahead of a release, and
+  # a pin of ^11.0.2 does not intersect that, so version solving failed outright
+  # against local sibling checkouts and bin/check could not run at all. Leaving
+  # it out means the resolved version follows whichever magic is in play, and
+  # the day magic publishes its file_picker 12 port nothing here needs editing.
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +80,7 @@ flutter:
 
   assets:
     - assets/lang/en.json
+    - assets/lang/tr.json
     # Runtime env. Must be bundled so flutter_dotenv can load it on web;
     # without this the app silently falls back to Env defaults
     # (BROADCAST_CONNECTION=null) and realtime never connects. `.env` is

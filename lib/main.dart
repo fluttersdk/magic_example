@@ -10,6 +10,8 @@ import 'config/cache.dart';
 import 'config/logging.dart';
 import 'config/broadcasting.dart';
 import 'config/deeplink.dart';
+import 'config/localization.dart';
+import 'config/notifications.dart';
 import 'config/wind_theme.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:magic_devtools/magic_devtools.dart';
@@ -37,6 +39,8 @@ void main() async {
       () => loggingConfig,
       () => broadcastingConfig,
       () => deeplinkConfig,
+      () => localizationConfig,
+      () => notificationsConfig,
       () => magicStarterConfig,
     ],
   );

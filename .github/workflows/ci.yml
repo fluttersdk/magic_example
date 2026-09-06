@@ -60,6 +60,19 @@ jobs:
         with:
           channel: stable
           cache: true
+      # bin/check's run_lockfile never runs in CI, because CI does not invoke
+      # bin/check at all: it runs the individual tools. Without this step the
+      # only thing standing between a path-poisoned lock and main is whether a
+      # developer chose to run the gate locally, and the symptom in CI would be
+      # a pub resolution error naming a directory nobody recognises. Before
+      # `flutter pub get`, since that would rewrite the evidence.
+      - name: Committed lock is hosted-only
+        run: |
+          if grep -qE 'source: (path|git)' pubspec.lock; then
+            echo "pubspec.lock carries local sibling paths. Regenerate it with pubspec_overrides.yaml moved aside." >&2
+            grep -nE 'source: (path|git)' pubspec.lock >&2
+            exit 1
+          fi
       - name: Resolve dependencies
         run: flutter pub get
       - name: Analyze
@@ -117,3 +130,57 @@ jobs:
       - uses: actions/checkout@v7
       - name: Scan for raw color literals
         run: bin/design-tokens
+
+  # No sibling checkouts and no pubspec_overrides.yaml (gitignored, never checked
+  # out here): this is the exact graph `flutter pub add` gives a fork. Before Step
+  # 1, pubspec.yaml pinned `magic_notifications: ^0.0.2`, which does not intersect
+  # `magic_starter` alpha.26's own `^0.2.0` requirement, so pub silently walked the
+  # starter back to alpha.24 and `flutter pub get` still exited 0. A resolve-only
+  # job would have stayed green through that regression; the version assertion
+  # below is what actually observes it.
+  published:
+    name: Published graph (hosted resolution)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Resolve against pub.dev
+        run: flutter pub get
+      # The lock is TRACKED, so a resolve that rewrites it means the committed
+      # lock disagreed with pubspec.yaml. CI would otherwise repair that in
+      # place and inspect the repaired copy, so the drift never surfaces and a
+      # fork keeps cloning a lock nothing has verified. bin/check's run_lockfile
+      # cannot see this: it reads the index on a developer's machine, and there
+      # is no index here.
+      - name: Assert the committed lock matches what pub.dev resolves
+        run: git diff --exit-code -- pubspec.lock
+      - name: Analyze against the published siblings
+        run: flutter analyze
+      # `flutter pub get` exits 0 on a downgrade as long as SOME version in the
+      # constraint range resolves; it does not care which one. Reading the lock's
+      # own hosted version is the only way to tell the intended release apart
+      # from a silent walk-back to an older prerelease, which is what this repo
+      # shipped for several releases: a `magic_notifications` constraint stopped
+      # intersecting the starter's own requirement and pub quietly chose
+      # alpha.24 instead of failing.
+      #
+      # The floor is READ from pubspec.yaml rather than written here. A literal
+      # would turn this job red on the next routine bump, in a file whose author
+      # has no reason to look, and the failure would name a version nobody typed.
+      - name: Assert magic_starter did not resolve below its constraint floor
+        run: |
+          floor=$(grep -E '^[[:space:]]+magic_starter:' pubspec.yaml | sed -E 's/.*\^//')
+          resolved=$(awk '/^  magic_starter:/{f=1; next} f && /^    version:/{print $2; exit} f && /^  [a-zA-Z]/{exit}' pubspec.lock | tr -d '"')
+          echo "constraint floor: ${floor:-<not found>} | resolved: ${resolved:-<not found>}"
+          if [ -z "$floor" ] || [ -z "$resolved" ]; then
+            echo "could not read the floor from pubspec.yaml or the version from pubspec.lock; the assertion below would pass vacuously" >&2
+            exit 1
+          fi
+          if [ "$(printf '%s\n%s\n' "$floor" "$resolved" | sort -V | head -1)" != "$floor" ]; then
+            echo "magic_starter resolved to '$resolved', which is BELOW the '$floor' floor in pubspec.yaml. Some constraint stopped intersecting what that release requires, and pub picked an older one rather than failing." >&2
+            exit 1
+          fi
