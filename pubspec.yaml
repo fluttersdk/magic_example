@@ -37,7 +37,7 @@ dependencies:
   # gitignored pubspec_overrides.yaml; that file never ships in the fork.
   magic: ^0.0.6
   magic_deeplink: ^0.0.2
-  magic_notifications: ^0.0.2
+  magic_notifications: ^0.2.0
   magic_social_auth: ^0.0.2
   magic_starter: ^0.0.1-alpha.17
 
