@@ -17,7 +17,7 @@ That override file is also why a green local run can be a red CI: with it, this 
 
 ## Stack
 
-- Flutter >=3.27.0, Dart >=3.6.0.
+- Dart `sdk: ^3.12.2` (`pubspec.yaml:22`), with no separate Flutter version floor declared.
 - `magic` (framework: IoC container, ORM, auth, routing over `go_router`), `magic_starter` (auth, profile, teams, notifications, 13 opt-in features), `fluttersdk_wind` (utility-first styling through `className`), `magic_devtools` (dev-only preview catalog and dusk integration).
 - A Laravel backend under `backend/` as the API counterpart.
 
@@ -50,7 +50,7 @@ A green suite is the floor, not the finish line. Anything a person clicks gets d
 
 ## Off-limits
 
-- Generated files are regenerated, never edited: `docs/component-registry.md` (`bin/sync-registry`), `.github/skills/{magic-framework,wind-ui}/SKILL.md` (`bin/sync-skills`, each carrying the hash CI checks it against), `lib/config/wind_theme.g.dart` (`design:sync`), `lib/preview/_previews.g.dart` (`previews:refresh`), `lib/app/commands/_index.g.dart` (`commands:refresh`), `.artisan/plugins.json`, and everything `bin/sync-instructions` writes under `.github/`.
+- Generated files are regenerated, never edited: `docs/component-registry.md` (`bin/sync-registry`), `.github/skills/{magic-framework,wind-ui}/SKILL.md` (`bin/sync-skills`, each carrying the hash CI checks it against), `lib/config/wind_theme.g.dart` (`design:sync`), `lib/_previews.g.dart` (`previews:refresh`), `lib/app/commands/_index.g.dart` (`commands:refresh`), `.artisan/plugins.json`, and everything `bin/sync-instructions` writes under `.github/`.
 - `backend/vendor/`, `build/`, `.dart_tool/`.
 - The fluttersdk packages are separate repositories. Reading them is expected; changing one is a PR in that repo under its own rules. `design:sync`, `design:lint`, `make:component`, and `previews:refresh` are `magic`'s commands, not this project's, and there is no `magic_example:artisan`.
 
@@ -63,6 +63,10 @@ All colours go through the semantic alias keys, never `Color(0xFF...)` or `Color
 App components live in `lib/ui/components/<name>/` as a four-file atomic folder, with no app-level barrel and no re-export aliases. `.claude/rules/design.md` carries the contract, the recipe mechanics, and the anti-pattern table, and loads when you touch `lib/`.
 
 Regeneration commands, all through the dispatcher: `dart run bin/dispatcher.dart design:sync`, `design:lint`, `previews:refresh`, `make:component <Name> [--variants=intent,size] [--slots]`.
+
+## Mirroring the boilerplate
+
+This repo is the fork source for real products in the ecosystem. `uptizm/AGENTS.md` carries the sending half of this policy and names `../magic_example` as the boilerplate it was forked from. Not every fork carries it yet (depools does not), so a fork that has sent nothing back is a gap to close rather than an exemption. A structural change proven in one of those products (a rule, a skill, the component contract, tooling like `bin/check`) comes back here as its own PR, in the same piece of work that proved it out. Product code (a fork's domain models, screens, billing wiring) does not travel; only the pattern does. When a PR against this repo cites a fork as the reason for a change, that is the mechanism working as intended, not scope creep to push back on.
 
 ## Where the instructions live
 

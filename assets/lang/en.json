@@ -91,6 +91,10 @@
     "privacy_policy": "Privacy Policy",
     "legal_and": "and"
   },
+  "dashboard": {
+    "loading": "Loading your dashboard...",
+    "welcome_back": "Welcome back, :name"
+  },
   "errors": {
     "unexpected": "An unexpected error occurred. Please try again.",
     "network_error": "Network connection failed. Please check your internet connection and try again.",
@@ -186,6 +190,28 @@
     },
     "timezone": {
       "subtitle": "Set the timezone used for displaying dates and times."
+    },
+    "titles": {
+      "appearance": "Appearance",
+      "forgot_password": "Forgot Password",
+      "language": "Language",
+      "login": "Sign In",
+      "newsletter": "Newsletter",
+      "notification_preferences": "Notification Preferences",
+      "notifications": "Notifications",
+      "otp": "Verification Code",
+      "password": "Password",
+      "profile": "Profile",
+      "register": "Create Account",
+      "reset_password": "Reset Password",
+      "sessions": "Active Sessions",
+      "settings": "Settings",
+      "team_create": "Create Team",
+      "team_invitation": "Team Invitation",
+      "team_settings": "Team Settings",
+      "timezone": "Timezone",
+      "two_factor": "Two-Factor Authentication",
+      "two_factor_challenge": "Two-Factor Challenge"
     }
   },
   "nav": {
@@ -208,7 +234,12 @@
     "no_preferences": "No notification preferences available.",
     "channel_email": "Email",
     "channel_in_app": "In-App",
-    "channel_push": "Push"
+    "channel_push": "Push",
+    "channel_sms": "SMS",
+    "delete": "Delete notification",
+    "delete_confirm_message": "This notification will be permanently removed.",
+    "delete_confirm_title": "Delete notification?",
+    "delete_failed": "Failed to delete notification. Please try again."
   },
   "profile": {
     "browser_sessions": "Browser Sessions",

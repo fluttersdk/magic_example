@@ -9,7 +9,7 @@ These rules apply whenever you touch any file under `lib/`. They complement `CLA
 
 ## Atomic Component Folder Contract
 
-Every component in the `magic_starter` generic library lives in a 4-file atomic folder:
+Every component in this app's own `lib/ui/components/` library lives in a 4-file atomic folder:
 
 ```
 lib/ui/components/<name>/
@@ -52,7 +52,7 @@ final myRecipe = WindRecipe(
 - Emission order is always: `base ++ variant (definition order) ++ compound ++ caller`. Never sort or deduplicate.
 - Pass variant values as strings matching the map keys. Pass `null` to clear a default.
 - The caller `className` argument appends last; it can override variant output at the same granularity.
-- Import `WindRecipe` via `package:magic/magic.dart` inside `magic_starter` files (it re-exports the wind barrel). Direct `package:fluttersdk_wind/...` imports trip `depend_on_referenced_packages`.
+- Import `WindRecipe` via `package:magic/magic.dart` inside this app's files (it re-exports the wind barrel). Direct `package:fluttersdk_wind/...` imports trip `depend_on_referenced_packages`.
 
 ## Token-Only Rule
 

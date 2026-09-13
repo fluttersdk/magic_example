@@ -4,4 +4,9 @@
 
 import 'package:fluttersdk_artisan/artisan.dart';
 
-List<ArtisanCommand> get commands => <ArtisanCommand>[];
+import 'app_rename_command.dart';
+
+List<ArtisanCommand> get commands => <ArtisanCommand>[
+  AppRenameCommand(),
+];
+

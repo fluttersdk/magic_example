@@ -1,5 +1,6 @@
 import 'package:magic/magic.dart';
 
+import 'example_status_tokens.dart';
 import 'wind_theme.g.dart';
 
 /// The app's Wind theme, assembled in ONE place.
@@ -17,7 +18,11 @@ import 'wind_theme.g.dart';
 WindThemeData buildWindTheme() {
   return WindThemeData(
     colors: designColors,
-    aliases: <String, String>{...designAliases, ...supplementAliases},
+    aliases: <String, String>{
+      ...designAliases,
+      ...supplementAliases,
+      ...exampleStatusAliases,
+    },
   );
 }
 

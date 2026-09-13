@@ -182,6 +182,51 @@ require_local_siblings() {
     exit 1
 }
 
+# The committed pubspec.lock has to be the HOSTED-only resolution. A lock generated
+# while pubspec_overrides.yaml is active encodes the sibling working trees, which
+# resolve on this machine and nowhere else, so committing one breaks CI and the
+# deploy at once. A local `pub get` rewrites the lock that way constantly (the
+# overrides put sibling paths back in it every time), which is why this is a gate
+# rather than a note: leave the resulting dirty working copy unstaged, since only
+# the STAGED content is checked here.
+#
+# This guard and `require_local_siblings` above read opposite states on purpose
+# and do not wedge each other: that one demands pubspec_overrides.yaml be PRESENT
+# in the working tree, this one demands the STAGED lock carry no path from it.
+# Regenerating the lock hosted-only never removes the overrides file itself
+# (only moves it aside and back), so both hold at once during ordinary local work.
+run_lockfile() {
+    local staged
+    staged=$(git show :pubspec.lock 2>/dev/null) || {
+        echo "pubspec.lock is not tracked; commit the hosted-only lock" >&2
+        return 1
+    }
+    # A positive control before the negative test. `grep -q` exits 1 on EMPTY
+    # input exactly as it does on clean input, so a staged lock that is empty or
+    # truncated would sail through the check below reporting "no local paths".
+    # The whole job of this gate is to notice a bad lock, and a zero-byte one is
+    # the worst kind.
+    if [ "$(printf '%s' "$staged" | grep -c 'sdks:')" -eq 0 ]; then
+        echo "pubspec.lock is staged but carries no 'sdks:' block, so it is empty" >&2
+        echo "or truncated rather than clean. Regenerate it hosted-only." >&2
+        return 1
+    fi
+    # `source: path` rather than a relative `path: "../"`. The overrides file holds
+    # ABSOLUTE paths on purpose, so a poisoned lock reads `path: "/Users/..."` with
+    # `relative: false` and a relative-path pattern would match it zero times. The
+    # source line is the categorical test and covers both forms.
+    # `git` as well as `path`: bin/parse-overrides-test.py:78-91 covers a git
+    # override as a supported shape, and one resolves to `source: git` with a
+    # ref nobody else can fetch, which is the same class of unbuildable lock.
+    if printf '%s' "$staged" | grep -qE 'source: (path|git)'; then
+        echo "pubspec.lock encodes local sibling paths. Regenerate it hosted-only:" >&2
+        echo "  mv pubspec_overrides.yaml /tmp/ && flutter pub get && git add pubspec.lock" >&2
+        echo "  mv /tmp/pubspec_overrides.yaml ." >&2
+        return 1
+    fi
+    echo "lockfile: hosted-only, no local paths"
+}
+
 bootstrap_ignored_files
 require_local_siblings
 require_backend_vendor
@@ -252,6 +297,7 @@ echo
 wants flutter && start "flutter-analyze" run_flutter_analyze
 wants flutter && start "design-tokens" run_design_tokens
 wants flutter && start "registry" run_registry
+wants flutter && start "lockfile" run_lockfile
 wants flutter && start "overrides-parser" run_overrides_parser
 wants backend && start "backend-pint" run_backend_pint
 
