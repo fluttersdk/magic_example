@@ -141,6 +141,38 @@ class AppRenameCommand extends ArtisanCommand {
       display: display ?? current.display,
     );
 
+    // 2b. Refuse a target whose Kotlin directory would sit INSIDE the current
+    //     one. `--org=com.fluttersdk.magic_example --name=app` passes both
+    //     patterns above and names a real identity, but the move it implies is
+    //     `.../magic_example` into `.../magic_example/app`: the apply step
+    //     creates the destination first, `listSync` then returns it, and
+    //     renaming a directory into itself is EINVAL. That throw would land
+    //     after the identity rewrites are already on disk, leaving a half
+    //     renamed tree with git as the only undo, which is exactly what the
+    //     dirty-worktree guard below exists to keep survivable.
+    //
+    //     Refused here rather than repaired in `_planKotlinMove`, because the
+    //     whole point of planning before writing is that a refusal costs
+    //     nothing. The other direction, a destination that is an ANCESTOR of
+    //     the source, is safe and stays allowed: `createSync` is idempotent,
+    //     `listSync` sees only real children, and the emptied leaf is pruned.
+    //     Equality is excluded rather than caught here: an unchanged Kotlin
+    //     path is what a `--display`-only rename produces, and
+    //     `_planKotlinMove` already answers that with no move at all.
+    if (target.kotlinPath != current.kotlinPath &&
+        '${target.kotlinPath}/'.startsWith('${current.kotlinPath}/')) {
+      ctx.output.error(
+        'app:rename refused: the Kotlin package directory it would move into '
+        '(android/app/src/main/kotlin/${target.kotlinPath}) sits inside the '
+        'one it moves from (${current.kotlinPath}), and a directory cannot be '
+        'renamed into itself.\n'
+        'Reach the same identity in two runs, committing between them: '
+        'app:rename --name=${target.package}, then '
+        'app:rename --org=${target.org}. Neither run nests.',
+      );
+      return 1;
+    }
+
     // 3. Refuse a dirty worktree, but only when actually writing. A dry run has
     //    to stay usable in the middle of unrelated work.
     if (!dryRun) {
@@ -634,6 +666,12 @@ class AppRenameCommand extends ArtisanCommand {
     out.writeln('  package  ${from.package} -> ${to.package}');
     out.writeln('  org      ${from.org} -> ${to.org}');
     out.writeln('  display  ${from.display} -> ${to.display}');
+    // The two derived ids, because they are not the concatenation a reader
+    // predicts: the Apple one camel cases every segment (see [appleId]) and
+    // the Android one keeps the underscores, so a dry run that printed only
+    // the three inputs above hid the one value code signing rejects.
+    out.writeln('  androidId ${from.androidId} -> ${to.androidId}');
+    out.writeln('  appleId   ${from.appleId} -> ${to.appleId}');
     out.writeln('');
 
     out.writeln('changed (${plan.changed.length}):');
@@ -806,14 +844,21 @@ class _Identity {
   String get androidId => '$org.$package';
 
   /// Apple bundle identifier. Apple's tooling rejects underscores in a bundle
-  /// id, so the package name is camel cased here and only here.
-  String get appleId => '$org.$_camelPackage';
+  /// id, so EVERY segment is camel cased here and only here, the org included:
+  /// `com.acme_inc` is the ordinary Java and Kotlin encoding of the domain
+  /// `acme-inc.com`, so refusing it in [_orgPattern] would decline a legitimate
+  /// org, while camel casing only the package would leave `com.acme_inc.acmeApp`
+  /// in `CFBundleIdentifier`, which allows alphanumerics, hyphen and period
+  /// alone. The result no longer matches [androidId] character for character,
+  /// which is why [_report] prints both.
+  String get appleId =>
+      '${org.split('.').map(_camel).join('.')}.${_camel(package)}';
 
   /// Directory path under `android/app/src/main/kotlin/`.
   String get kotlinPath => '${org.split('.').join('/')}/$package';
 
-  String get _camelPackage {
-    final parts = package.split('_');
+  static String _camel(String segment) {
+    final parts = segment.split('_');
     return parts.first +
         parts
             .skip(1)

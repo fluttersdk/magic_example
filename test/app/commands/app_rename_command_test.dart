@@ -425,6 +425,38 @@ void main() {
   });
 
   group('app:rename refusals', () {
+    test('camel cases an underscored org into the Apple bundle id', () async {
+      // `com.acme_inc` is the ordinary Java and Kotlin encoding of the domain
+      // `acme-inc.com`, so it is accepted rather than refused. Apple is the
+      // one platform that cannot take it: CFBundleIdentifier allows
+      // alphanumerics, hyphen and period alone, so an underscore surviving
+      // into the pbxproj fails code signing. Android keeps it, because the
+      // underscore is significant to plugin discovery.
+      final root = fixture();
+
+      await _run(
+        root,
+        name: 'acme_app',
+        org: 'com.acme_inc',
+        display: 'Acme App',
+      );
+
+      String read(String path) =>
+          File('${root.path}/$path').readAsStringSync();
+      expect(
+        read('ios/Runner.xcodeproj/project.pbxproj'),
+        contains('PRODUCT_BUNDLE_IDENTIFIER = com.acmeInc.acmeApp;'),
+      );
+      expect(
+        read('macos/Runner/Configs/AppInfo.xcconfig'),
+        contains('PRODUCT_BUNDLE_IDENTIFIER = com.acmeInc.acmeApp'),
+      );
+      expect(
+        read('android/app/build.gradle.kts'),
+        contains('com.acme_inc.acme_app'),
+      );
+    });
+
     test('rejects a --name that is not a Dart package identifier', () async {
       for (final invalid in const ['Acme App', '../evil', 'com.acme', '9app']) {
         final root = fixture();
@@ -441,6 +473,43 @@ void main() {
         expect(result.output, contains('app:rename refused --name'));
         expect(_snapshot(root), before);
       }
+    });
+
+    test('rejects a target whose Kotlin package nests inside the current one',
+        () async {
+      // `com.fluttersdk.magic_example` plus `app` is a valid identity by every
+      // pattern, and the move it implies is the fixture's own package into a
+      // child of itself. The apply step creates the destination first and then
+      // lists the source, so the rename lands on the directory it just made
+      // and throws EINVAL, after the identity files are already written. The
+      // refusal has to come before any of that, which is what the snapshot
+      // assertion pins.
+      final root = fixture();
+      final before = _snapshot(root);
+
+      final result = await _run(
+        root,
+        name: 'app',
+        org: 'com.fluttersdk.magic_example',
+        display: 'App',
+      );
+
+      expect(result.code, 1);
+      expect(result.output, contains('sits inside the one it moves from'));
+      expect(result.output, contains('app:rename --name=app'));
+      expect(_snapshot(root), before);
+    });
+
+    test('allows a rename that only moves the display name', () async {
+      // The nesting guard reads two Kotlin paths, and a display-only rename
+      // leaves them identical. Refusing on equality would decline the one
+      // rename that moves no directory at all.
+      final root = fixture();
+
+      final result = await _run(root, display: 'Renamed App');
+
+      expect(result.code, 0);
+      expect(result.output, isNot(contains('sits inside')));
     });
 
     test('rejects an --org that is not reverse DNS', () async {

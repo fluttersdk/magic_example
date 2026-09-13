@@ -180,7 +180,31 @@ jobs:
             echo "could not read the floor from pubspec.yaml or the version from pubspec.lock; the assertion below would pass vacuously" >&2
             exit 1
           fi
-          if [ "$(printf '%s\n%s\n' "$floor" "$resolved" | sort -V | head -1)" != "$floor" ]; then
+          # Compared with semver rules rather than `sort -V`, which disagrees
+          # with them on exactly the versions this job exists to catch: GNU
+          # filevercmp orders an empty suffix BELOW `-alpha.1`, so a floor of
+          # `0.0.27` against a walk-back to `0.0.27-alpha.1` puts the floor
+          # first and the assertion passed (measured locally, both orderings).
+          # The same disagreement fires the other way on an alpha floor and a
+          # stable resolution, turning a genuine upgrade red. python3 is on
+          # every GitHub-hosted runner.
+          if ! python3 -c '
+          import sys
+
+          def key(version):
+              core, _, pre = version.partition("+")[0].partition("-")
+              numbers = tuple(int(part) for part in core.split("."))
+              if not pre:
+                  # Semver 11.3: no prerelease outranks one carrying it.
+                  return (numbers, 1, ())
+              identifiers = tuple(
+                  (0, int(p), "") if p.isdigit() else (1, 0, p)
+                  for p in pre.split(".")
+              )
+              return (numbers, 0, identifiers)
+
+          sys.exit(0 if key(sys.argv[2]) >= key(sys.argv[1]) else 1)
+          ' "$floor" "$resolved"; then
             echo "magic_starter resolved to '$resolved', which is BELOW the '$floor' floor in pubspec.yaml. Some constraint stopped intersecting what that release requires, and pub picked an older one rather than failing." >&2
             exit 1
           fi

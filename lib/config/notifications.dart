@@ -25,6 +25,24 @@ Map<String, dynamic> get notificationsConfig => {
 
       'notify_button_enabled': false,
 
+      // Where the OneSignal worker is served from and the scope it claims,
+      // matching the two constants `notifications:install` writes into
+      // `web/` (`_serviceWorkerPath`, `_serviceWorkerScope`). Literals rather
+      // than `env` for the same reason as the flag above: this is a build
+      // layout fact, not a per-environment one.
+      //
+      // Load-bearing on the web, and silently so. `OneSignalWebDriver` omits
+      // an absent key from the config it hands the SDK, which then registers
+      // `OneSignalSDKWorker.js` at the ROOT scope, and a Flutter web build
+      // already owns that scope with `flutter_service_worker.js`: whichever
+      // registration lands second wins it, and when Flutter's does, push
+      // never arrives on a device the reconciler still reports as converged.
+      // A fork cannot recover these by re-running the installer either, since
+      // `notifications:install` refuses to overwrite a config file that
+      // exists while still writing the worker beside it.
+      'service_worker_path': 'OneSignalSDKWorker.js',
+      'service_worker_scope': '/onesignal/',
+
       // ----------------------------------------------------------------------
       // The permission posture: ask once where a gesture already justifies it,
       // never spend the one-shot browser prompt on an unprompted page load.
@@ -61,6 +79,11 @@ Map<String, dynamic> get notificationsConfig => {
       'fallback_to_settings': true,
     },
     'database': {
+      // Declared for parity with the package's own install stub and read by
+      // `notifications:configure`, which prints it and rewrites it in place.
+      // No runtime code gates on it: `DatabaseChannel.isAvailable` answers
+      // true unconditionally, so switching this off does not stop the poller.
+      // Use `Notify.stopPolling()` for that.
       'enabled': true,
       'polling_interval': 30, // seconds
     },
