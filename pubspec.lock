@@ -785,10 +785,10 @@ packages:
     dependency: "direct main"
     description:
       name: magic_notifications
-      sha256: "507de0d7ccb03aa002cc5474276cafe8023bb7fcdc1812fdd48f50a779a831a1"
+      sha256: aee5e0bf5ecc6c64b35c90916c117c1151714a386995bcfc08dc2adf29c14ecb
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1"
+    version: "0.3.2"
   magic_payments:
     dependency: transitive
     description:
