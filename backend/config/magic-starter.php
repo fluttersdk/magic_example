@@ -4,6 +4,7 @@ use FlutterSdk\MagicStarter\Features;
 use FlutterSdk\MagicStarter\Models\Team;
 use FlutterSdk\MagicStarter\Models\TeamInvitation;
 use FlutterSdk\MagicStarter\Models\TeamUser;
+use FlutterSdk\MagicStarter\Support\RevenueCatClient;
 
 return [
     /*
@@ -48,6 +49,7 @@ return [
         // \FlutterSdk\MagicStarter\Features::phoneOtp(),
         Features::emailVerification(),
         // \FlutterSdk\MagicStarter\Features::timezones(),
+        // \FlutterSdk\MagicStarter\Features::billing(),
     ],
 
     /*
@@ -128,6 +130,14 @@ return [
     'team_photo_disk' => env('MAGIC_STARTER_TEAM_PHOTO_DISK', env('MAGIC_STARTER_PROFILE_PHOTO_DISK', 'public')),
     'profile_photo_path' => env('MAGIC_STARTER_PROFILE_PHOTO_PATH', 'profile-photos'),
     'team_photo_path' => env('MAGIC_STARTER_TEAM_PHOTO_PATH', 'team-photos'),
+    /*
+    | Where a generated avatar comes from for an account that has uploaded no
+    | photo. Set it to an EMPTY string to send `profile_photo_url: null`
+    | instead, which is usually what a JSON client wants: it draws its own
+    | initials already, and the generated image otherwise costs a third-party
+    | round trip per avatar, sends the person's name to that third party, fails
+    | offline, and arrives in colours the client's design system did not pick.
+    */
     'ui_avatars_url' => env('MAGIC_STARTER_UI_AVATARS_URL', 'https://ui-avatars.com/api/'),
 
     /*
@@ -140,6 +150,27 @@ return [
     */
 
     'route_prefix' => env('MAGIC_STARTER_ROUTE_PREFIX', 'api/v1'),
+
+    /*
+    | Middleware applied to every route in `src/routes/api.php`.
+    |
+    | NOT the vendor webhook routes. Those load from `src/routes/webhooks.php`
+    | under their own gate and deliberately inherit nothing from here: a webhook
+    | URL is registered in a vendor dashboard and is called by that vendor, not
+    | by your users, so a tenant scope or a locale resolver has nobody to resolve
+    | and an auth middleware would reject the call.
+    |
+    | These routes are loaded by the service provider rather than from the
+    | host's `routes/api.php`, so they join NO middleware group on their own.
+    | Anything the host relies on in its `api` group (a locale resolver, a
+    | request id, a tenant scope) does not run here unless it is named below.
+    |
+    | Empty by default rather than `['api']`: every route here already declares
+    | the throttle it wants by name, and defaulting into a group that carries
+    | `throttle:api` as well would silently halve a rate limit a prior release
+    | granted.
+    */
+    'route_middleware' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -251,6 +282,359 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Billing
+    |--------------------------------------------------------------------------
+    |
+    | The package ships the entitlement CONTRACT, not a payment rail: the two
+    | neutral enums, the provenance columns, and the one action that arbitrates
+    | between rails writing the same tier. Your own rail (Cashier, a store SDK,
+    | an operator command) feeds it.
+    |
+    | 'billable' is WHICH KIND of thing you bill, and it accepts exactly two
+    | values: 'user' or 'team'. It is a closed token rather than a model class
+    | name deliberately, because the package has to know what kind of subject it
+    | is writing to and a class name cannot say (an App\Models\Account could be
+    | either). The class itself still comes from the 'models' block above, so a
+    | published App\Models\Team or your own user model is picked up unchanged.
+    |
+    | The default is 'user' because the teams feature ships OFF: on a fresh
+    | install there is no team to bill, not even a personal one. Selecting 'team'
+    | therefore REQUIRES the teams feature, and the provider refuses to boot
+    | rather than letting an entitlement be written to a subject that does not
+    | exist. Any other PRESENT value, including an explicit null, is refused at
+    | boot for the same reason. Leaving the key out entirely is not: an older
+    | published config has no key at all, and 'user' is the answer for it.
+    |
+    | 'tier_order' is your plan catalogue, CHEAPEST FIRST. The tier vocabulary
+    | belongs to your application, so this package never guesses it; list your
+    | own plan ids in the order a customer upgrades through them.
+    |
+    | WritesEntitlement uses this list for exactly one decision: whether an
+    | incoming write from a DIFFERENT billing rail than the one on record would
+    | leave the billable holding LESS than it holds now. Such a write is
+    | dropped, because a rail may only revoke what it granted.
+    |
+    | Leaving the list empty makes that comparison undecidable, and an
+    | undecidable cross-rail write against a tier the billable HOLDS is REFUSED,
+    | with a warning naming this key. A billable holding nothing is a separate
+    | case and is unaffected: there is no tier to take away, so such a write
+    | applies whether or not this list is published. So the empty default is
+    | safe for a fresh install and is not safe once you sell something on more
+    | than one rail: publish the order then.
+    |
+    | 'plans' is the CATALOGUE the billing screen renders: one entry per tier,
+    | cheapest first, served verbatim under a 'data' envelope by
+    | GET billing/plans. It is display data and gating data, never Stripe price
+    | ids (those are 'prices' below).
+    |
+    | 'prices' maps a Stripe price id onto the tier AND the cycle it sells. A
+    | tier is not a price: sold monthly and annually it is two, and the checkout
+    | asks for a (tier, cycle) pair so the customer is charged the figure the
+    | screen showed them. A bare value ('price_x' => 'pro') names the tier and is
+    | read as MONTHLY, which is a guess this package cannot verify, so declare
+    | ['tier' => ..., 'cycle' => ...] on anything that is not monthly or every
+    | screen will report the wrong interval over a real charge.
+    |
+    | THE FIRST ENTRY MATCHING A (tier, cycle) PAIR WINS, in the order written
+    | here. The old shape had one entry per tier by construction and this one
+    | invites several: the realistic case is a grandfathered price kept mapped so
+    | its webhooks still grant the tier, and new checkouts then go to whichever
+    | of the two is listed higher, silently. List the price you want SOLD first
+    | and keep retired ones below it.
+    |
+    | The package names only the fields every billing screen needs: 'id', 'name',
+    | 'tagline', 'monthly', 'annual', 'currency', 'features', 'recommended', plus
+    | 'cycles', which is RESERVED and derived: the endpoint computes it from the
+    | price map below and overwrites whatever an entry carries under that key, so
+    | do not write one. Every other key you put on an entry travels to the client
+    | UNTOUCHED, which is where anything product-specific belongs: what a tier
+    | caps, what it unlocks, the copy for a capability only your product has.
+    | This package cannot know those and does not try, exactly as it delegates
+    | counting to ReportsUsage and the tier vocabulary to the list below. A null
+    | price means "contact us"; what a null LIMIT means is your application's
+    | business, not this package's.
+    |
+    | A bullet in 'features' is a promise made to somebody holding a credit card,
+    | so it may only name something that works today.
+    |
+    | ORDER AND RANKING. When 'tier_order' below is published it is the ranking,
+    | full stop, and this catalogue is only display. When it is NOT published the
+    | order is taken from these entries' ids instead, so an adopter who publishes
+    | one list gets both behaviours rather than a working screen beside an
+    | undecidable cross-rail write. Publishing both and having them disagree
+    | means the explicit list wins, because it is the more specific declaration;
+    | there is no reason to write two orders, so write one.
+    |
+    | 'prices' is which Stripe PRICE sells which tier ON WHICH CYCLE, in either
+    | of the two forms described above: a bare 'price_id' => 'tier_id' string,
+    | read as MONTHLY, or the explicit ['tier' => ..., 'cycle' => ...] entry. The
+    | Stripe rail reads it in both directions: a webhook asks which tier and
+    | cycle the price on a subscription sells, and a checkout asks which price
+    | sells the (tier, cycle) pair the customer picked.
+    |
+    | It lives here rather than under cashier.plans, which is where an earlier
+    | application kept it. That key is NOT part of Cashier: Cashier's own config
+    | has no 'plans' key at all, so an adopter following Cashier's documentation
+    | would never create one, every price would resolve to no tier, and no
+    | webhook would ever grant anything, with no error anywhere to say why.
+    |
+    | 'store_products' is the same question for the STORE rail: which App Store
+    | or Play product sells which tier, as a ['product_id' => 'tier_id'] map. The
+    | store rail cannot grant anything until it is filled, and an unmapped
+    | product is logged and written nowhere, which is the direction that cannot
+    | hand out a tier nobody bought.
+    |
+    | KEY IT ON THE WHOLE PRODUCT ID GOOGLE SENDS. Play reports a subscription as
+    | '<subscription_id>:<base_plan_id>', so a map keyed on the bare subscription
+    | id misses on every Android renewal and warns instead of granting. Apple
+    | sends the plain product id and needs no such care.
+    |
+    | An unmapped price is a CONFIG GAP and never a downgrade: a rail that cannot
+    | name the tier a paying subscription sells leaves the entitlement alone and
+    | warns, because the alternative is taking a tier away from somebody whose
+    | card just cleared.
+    |
+    | Assembling this from the environment is the normal case
+    | (env('CASHIER_PRICE_PRO') and friends), and it is also how the dangerous
+    | entry appears: an unset variable writes an EMPTY KEY, and an empty key that
+    | reached a reverse lookup would name the empty string as the price that
+    | sells a paid tier. Empty keys and empty tiers are therefore stripped when
+    | this map is read, so leaving a variable unset costs you one tier that
+    | cannot be sold rather than one that is given away.
+    |
+    | WHY laravel/cashier IS A HARD REQUIRE. It is the one dependency in this
+    | package that needed an argument. The four SDKs already in the require
+    | block (Sanctum, Socialite, google2fa, OneSignal) are libraries: they cost
+    | an adopter nothing until something resolves them. Cashier is a package
+    | with a service provider, and CashierServiceProvider::boot() runs for every
+    | adopter whether or not they bill, registering the stripe/webhook route
+    | under config('cashier.path'), merging a cashier config, and adding a
+    | vendor:publish group.
+    |
+    | Cashier::ignoreRoutes() is what makes that acceptable. The provider calls
+    | it from register() under the billing feature gate, which is the only phase
+    | early enough: every provider's register() runs before any provider's
+    | boot(), so by the time Cashier boots the refusal is already in place. With
+    | billing on, the package serves the webhook under a key of its own and
+    | Cashier's route never appears; with billing off, nothing here touches
+    | Cashier and an adopter driving it directly keeps their own routes.
+    |
+    | The publish group is the one residual cost and it cannot be vetoed in
+    | code: addPublishGroup() is additive and Laravel exposes no removal, so
+    | Cashier's groups stay listed under vendor:publish.
+    |
+    | THE STRIPE WEBHOOK KEEPS CASHIER'S PATH AND CASHIER'S SECRET, and both are
+    | deliberate exceptions to the package-owned-key rule 'prices' follows above.
+    |
+    | The package serves the webhook itself (src/routes/webhooks.php, loaded from
+    | its own loadRoutesFrom under the billing feature), and it registers the
+    | route under config('cashier.path'), which defaults to 'stripe'. So the
+    | served path is `stripe/webhook`: exactly what Cashier serves, exactly what
+    | an adopter arriving from Cashier already has in their Stripe dashboard.
+    | That file is separate from src/routes/api.php because nothing here may
+    | inherit 'route_prefix' above: an API prefix moves with a deploy, and a
+    | webhook URL registered in a vendor dashboard cannot, so inheriting it would
+    | 404 every delivery until somebody edited the dashboard by hand.
+    |
+    | config('cashier.webhook.secret') stays Cashier's key for a stricter reason
+    | than convention: Cashier's own WebhookController::__construct() is what
+    | reads it, and it attaches the signature middleware only when it is set.
+    | Moving it under a package key would leave that constructor reading an empty
+    | value and would silently UNSIGN the endpoint. 'prices' moved precisely
+    | because the opposite is true of it: 'cashier.plans' was never a Cashier key
+    | at all, so nothing in Cashier reads it.
+    |
+    | DO NOT RUN `vendor:publish --tag=cashier-migrations`. That is the residual
+    | cost turning into a broken schema, and it is the one instruction here that
+    | can only be written down. Cashier's five migrations hardcode
+    | Schema::table('users'), $table->id() and foreignId('user_id'): on an
+    | application billing a team they put the Stripe customer columns on the
+    | wrong table, and on any application using UUID keys they create a bigint
+    | `subscriptions` whose child `subscription_items` cannot reference it. The
+    | package ships its own three in place of those five
+    | (add_cashier_customer_columns_to_billable_table, create_subscriptions_table
+    | and create_subscription_items_table), resolving the table from 'billable'
+    | and the key type from 'use_uuids', with Cashier's two later meter columns
+    | folded into the items create. `magic-starter:install` publishes them in
+    | dependency order.
+    |
+    | USAGE REPORTING has no key here, because it has no default to hold: the
+    | package ships FlutterSdk\MagicStarter\Contracts\ReportsUsage with
+    | deliberately NO default implementation and NO binding, and the usage
+    | endpoint it would feed is registered only once a consumer binds one
+    | (typically `$this->app->bind(ReportsUsage::class, ...)` in the
+    | consumer's own AppServiceProvider). Binding a default here would answer
+    | an empty usage map for every billable until the consumer wires real
+    | counting, and an empty map is not "unknown", it is "used nothing": every
+    | cap a consumer gates on that answer would silently open. See the
+    | contract's own docblock for the shipped defect this refusal exists to
+    | prevent.
+    |
+    | UPGRADING FROM A RELEASE BEFORE 'billable' EXISTED. Set this key
+    | EXPLICITLY before re-running the installer, even to the value you believe
+    | is already in effect. mergeConfigFrom is a shallow merge, so a config
+    | published before the key existed carries no 'billable' at all and the
+    | 'user' default answers for it. That is correct for the arbitration
+    | contract, and it is wrong for the SCHEMA of an application billing a team:
+    | the four migrations above resolve their target through
+    | MagicStarter::billableModel(), so a team-billing application that upgrades
+    | without setting the key gets a whole Cashier schema plus the entitlement
+    | provenance on `users` instead of `teams`. Nothing refuses it, and nothing
+    | can: the boot guard only rejects a token it does not RECOGNISE, and 'user'
+    | is a perfectly valid one. Before the Cashier tables shipped this cost one
+    | mis-targeted ALTER; it now costs the whole billing schema.
+    |
+    | 'revenuecat' configures the STORE rail: Apple App Store and Google Play
+    | subscriptions, reaching the application as webhook deliveries that are
+    | only ever a SIGNAL. What a subscriber is actually entitled to is read
+    | back from RevenueCat's API by
+    | \FlutterSdk\MagicStarter\Support\RevenueCatClient, so both halves of the
+    | rail need configuration here: the secret that authenticates an inbound
+    | delivery, and the key that authenticates the outbound read.
+    |
+    | It lives under a PACKAGE-OWNED key rather than under 'cashier', because
+    | RevenueCat has no Laravel vendor package at all here: there is no default
+    | to defer to and no adopter dashboard that already points at some other
+    | path, unlike the Stripe webhook, which keeps reading Cashier's own
+    | 'cashier.path'.
+    |
+    | The five SECRET AND TUNING ENV VAR NAMES below are NOT this package's to
+    | rename, even though the config key that reads them is. An adopter migrating
+    | from a hand-rolled RevenueCat integration already has these set on their
+    | server, and keeping the names means adopting this package is a config-file
+    | change rather than a server .env edit with a window where deliveries fail.
+    |
+    | 'path' is the WHOLE served path of the inbound webhook, and its default is
+    | constrained by the same fact: `webhooks/revenuecat` is the path the
+    | application this rail was extracted from already serves and already has
+    | registered in the RevenueCat dashboard. A webhook URL cannot move with a
+    | deploy, so any other default would make adopting this package a manual
+    | dashboard edit with a window in which every delivery 404s. Change it only
+    | when you are changing the dashboard in the same breath.
+    |
+    | THE ROUTE IS WITHHELD ON A HALF-CONFIGURED RAIL. When the store rail is
+    | configured (an API key or a store product map) and 'webhook_secret' is not,
+    | the endpoint could not authenticate anybody, so it is not registered at all:
+    | the provider logs the reason once at boot and `magic-starter:install`
+    | refuses to complete. The application keeps serving; only the store rail is
+    | held back, because an endpoint that refuses every delivery would spend
+    | RevenueCat's five retries on a configuration no retry can fix.
+    |
+    | BOTH SECRETS ARE EMPTY BY DEFAULT AND THE RAIL FAILS CLOSED ON EITHER.
+    | With no webhook secret the endpoint refuses every delivery, because it
+    | cannot tell RevenueCat apart from anybody who found the URL and an
+    | endpoint that queues a tier change must not accept an unauthenticated
+    | one. With no API key the authoritative read raises rather than answering
+    | "nothing is owed", which would revoke every paying team. Neither has a
+    | fallback: a default would be either a secret in a public repository or a
+    | value that authenticates as nobody.
+    |
+    | 'operation_budget_seconds' bounds the WHOLE retried read, not one call: a
+    | per-call timeout sized against a wall breaks the moment anything retries.
+    |
+    | 'accept_sandbox' is whether this deployment may act on sandbox purchases
+    | at all. FALSE in production, always: a sandbox purchase granting a real
+    | paid tier is money out of the door, and a store's sandbox is trivially
+    | reachable by anybody with a developer account. It only WIDENS what an
+    | inbound event is allowed to say; it is never read instead of it.
+    |
+    | 'reconcile' configures the SWEEP that heals a dropped webhook. Both rails
+    | abandon a delivery (RevenueCat after five retries inside about three
+    | hours, Stripe after roughly three days) and after that the drift is
+    | permanent and silent, so `billing:reconcile` re-reads each rail and
+    | corrects what moved. The package registers the schedule itself, under the
+    | billing feature, because a rail that only heals when the adopter
+    | remembered to schedule something is a rail that does not heal.
+    |
+    | THE DEFAULT IS DAILY, and that is a deliberate softening of the cadence
+    | the application this rail came from runs. The sweep makes one
+    | authoritative RevenueCat read per store subject per run, so hourly against
+    | a large store fleet is an API bill an adopter never agreed to, and this
+    | package ships the schedule whether or not they thought about it. Daily
+    | still heals inside Stripe's three-day window; it can be a day behind a
+    | store expiry. An adopter selling mostly through the stores should set this
+    | to 'hourly', which is what heals inside the window the damage arrives in.
+    |
+    | The value is a frequency WORD from the list the reconciler's registration
+    | recognises, or any cron expression, which is the escape hatch for a
+    | cadence no word names (a staggered sweep, or four times a day at hours you
+    | choose). A word that is not on the list and is not a valid cron expression
+    | raises from `schedule:run` rather than silently never running.
+    |
+    | The registration carries `withoutOverlapping()` and `onOneServer()`.
+    | onOneServer() is NOT fleet-wide protection on every cache store: it takes
+    | a lock through the default cache, and the `file` and `array` stores both
+    | implement locking LOCALLY (a file on that server's own disk, an array in
+    | that process's own memory), so every server acquires its own lock and runs
+    | its own sweep. Nothing raises and nothing warns. Point the default cache
+    | at a shared store (redis, memcached, database, dynamodb) if one sweep per
+    | fleet is what you need; otherwise expect one per server.
+    |
+    */
+
+    'billing' => [
+        'billable' => 'user',
+
+        'plans' => [
+            // [
+            //     'id' => 'free',
+            //     'name' => 'Free',
+            //     'tagline' => 'Kick the tires.',
+            //     'monthly' => 0,
+            //     'annual' => 0,
+            //     'currency' => 'usd',
+            //     'features' => [
+            //         'Everything you need to try it',
+            //     ],
+            //     'recommended' => false,
+            //     // Anything below this line is yours and travels untouched.
+            //     'limits' => [
+            //         'seats' => 1,
+            //     ],
+            // ],
+        ],
+
+        'tier_order' => [
+            // 'free',
+            // 'pro',
+            // 'business',
+        ],
+
+        'prices' => [
+            // A bare value names the tier and is read as MONTHLY. Terse, and
+            // correct only when the price really is a monthly one.
+            // env('CASHIER_PRICE_PRO') => 'pro',
+            //
+            // Declare the cycle when you sell a tier both ways, which is the
+            // form that lets a customer buy the annual figure your billing
+            // screen is showing them. A checkout names a tier AND a cycle and
+            // gets the price behind that exact pair; a cycle you have not mapped
+            // is refused with a 422 rather than charged at the other price.
+            // env('CASHIER_PRICE_PRO_MONTHLY') => ['tier' => 'pro', 'cycle' => 'monthly'],
+            // env('CASHIER_PRICE_PRO_ANNUAL') => ['tier' => 'pro', 'cycle' => 'annual'],
+        ],
+
+        'store_products' => [
+            // 'com.example.app.pro.monthly' => 'pro',
+            // 'business_monthly:business-base' => 'business',
+        ],
+
+        'reconcile' => [
+            'cadence' => env('MAGIC_STARTER_BILLING_RECONCILE_CADENCE', 'daily'),
+        ],
+
+        'revenuecat' => [
+            'path' => env('REVENUECAT_WEBHOOK_PATH', 'webhooks/revenuecat'),
+            'webhook_secret' => env('REVENUECAT_WEBHOOK_SECRET'),
+            'secret_api_key' => env('REVENUECAT_SECRET_API_KEY'),
+            'base_url' => env('REVENUECAT_BASE_URL', RevenueCatClient::DEFAULT_BASE_URL),
+            'operation_budget_seconds' => env('REVENUECAT_OPERATION_BUDGET_SECONDS', 10),
+            'accept_sandbox' => (bool) env('REVENUECAT_ACCEPT_SANDBOX', false),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | OneSignal Push Notifications
     |--------------------------------------------------------------------------
     |
@@ -295,5 +679,108 @@ return [
         */
 
         'target_channel' => 'push',
+
+        /*
+        |--------------------------------------------------------------------------
+        | External ID Prefix
+        |--------------------------------------------------------------------------
+        |
+        | What a device's OneSignal external id carries before the user's own
+        | key. Both sides have to compose the same string or the server
+        | addresses an id no device registered, and nothing anywhere says so:
+        | OneSignal accepts the notification and delivers it to nobody, leaving
+        | a zero-recipient response as the only trace.
+        |
+        | The Flutter client reads the same value from
+        | `magic_starter.notifications.external_id_prefix`, which defaults to
+        | the same `user_`. Change one and change the other.
+        |
+        | It is read in two places here: {@see HasNotifications::routeNotificationForOneSignal},
+        | and {@see OneSignalChannel::send}'s fallback for a notifiable that
+        | does not use the trait. That fallback used to send the key BARE,
+        | which is the one shape that can never work: it matches no device this
+        | stack registers, and OneSignal rejects a bare numeric external id
+        | outright. A published `App\Models\User` without the trait is the
+        | ordinary way to reach it, since `MagicStarter::userModel()` detects
+        | one automatically.
+        |
+        */
+
+        'external_id_prefix' => env('MAGIC_STARTER_EXTERNAL_ID_PREFIX', 'user_'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Web Origin
+        |--------------------------------------------------------------------------
+        |
+        | Where the Flutter web client is served, e.g. https://app.example.com.
+        | Set this and a push carrying a deep link opens the right SCREEN in a
+        | browser instead of the home page.
+        |
+        | It is needed because a browser reads `web_url` and nothing else. The
+        | mobile clients navigate from the notification's custom data, and the
+        | web one cannot: a click is handled by the service worker, which opens
+        | the launch url as an ordinary page load, so no Dart is running yet to
+        | read that data. OneSignal supplies the dashboard's Site URL when the
+        | payload names no url, which is why the symptom is the home page in a
+        | new tab rather than an error. Measured against a live deployment on
+        | 2026-09-10; nothing reported a failure.
+        |
+        | {@see OneSignalChannel::applyWebUrl} joins this to the deep link the
+        | notification already carries, so an application sets one value here
+        | rather than composing an absolute url in every notification class. A
+        | builder that sets `web_url` itself is always left alone.
+        |
+        | Absent means off, and off is the old behaviour rather than a broken
+        | one: mobile keeps working exactly as before and web keeps landing on
+        | the home page. Guessing an origin would be worse than not having one,
+        | since `APP_URL` on an API-only deployment is the API host and would
+        | send every web recipient somewhere the client is not served.
+        |
+        */
+
+        'web_origin' => env('MAGIC_STARTER_WEB_ORIGIN'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Self-Addressed Push Test
+        |--------------------------------------------------------------------------
+        |
+        | Whether POST {route_prefix}/notifications/push-test is switched on.
+        | The endpoint lets a signed-in person page their OWN devices, so they
+        | can find out whether push reaches the phone in their hand before an
+        | incident rather than during one. It takes no recipient: the target is
+        | derived from the Sanctum session.
+        |
+        | OFF, and an absent key is off too. Everything the endpoint does is
+        | make the platform emit a real push because a client asked it to, and
+        | that is a capability to switch on deliberately once an application
+        | actually offers the button, not one to have live and reachable by
+        | anything holding a token from the day the package is installed.
+        | Absence has to mean off for the same reason: `mergeConfigFrom` is a
+        | shallow merge, so a config published before this key existed carries
+        | an `onesignal` block with no switch in it, and an upgrade must not
+        | turn an outbound send on for an adopter who never asked for one.
+        |
+        | While it is off the route is still registered (under the
+        | `notifications` feature, as before) and answers 501: the server does
+        | not offer this functionality. That is deliberately none of the other
+        | three answers this endpoint gives. 403 means the caller may not, 409
+        | means push is not provisioned on this deployment, and 404 means the
+        | notifications feature is off entirely; a switched-off endpoint is
+        | none of those, and reusing one of them would send whoever hits it
+        | looking for the wrong thing.
+        |
+        | TURNING IT ON TAKES BOTH HALVES. The Flutter client carries the same
+        | switch, `notifications.push.self_test_enabled` in the magic
+        | notifications config, also off by default, and its push channel
+        | reports itself unavailable and posts nothing while that one is off.
+        | Setting only this key leaves a live endpoint no client calls; setting
+        | only the client's leaves a client posting requests that always 501.
+        | Set both, and only once something needs the button.
+        |
+        */
+
+        'self_test_enabled' => (bool) env('MAGIC_STARTER_PUSH_SELF_TEST_ENABLED', false),
     ],
 ];
