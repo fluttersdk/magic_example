@@ -465,18 +465,18 @@ packages:
     dependency: "direct main"
     description:
       name: fluttersdk_telescope
-      sha256: "9f6d0f11c8d9c7f2eddb733f3248f5ce61f2778d50b0cc257d60875f50a24056"
+      sha256: "9635ab5f657e05e357423a09adb90eeb254db327bb83c1a471abba5011c2db92"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.6"
+    version: "0.0.7"
   fluttersdk_wind:
     dependency: transitive
     description:
       name: fluttersdk_wind
-      sha256: "21bb766b4361c7cdd64973cc389093f540d81bb0d98dda8ebd004458f1920d97"
+      sha256: "537330873b7e5e0d022c297f4175fe6f96496badb7349368b109e0b765b13abb"
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.2"
+    version: "1.6.3"
   fluttersdk_wind_diagnostics_contracts:
     dependency: transitive
     description:
@@ -761,58 +761,58 @@ packages:
     dependency: "direct main"
     description:
       name: magic
-      sha256: d3659e0bbf246094483ca92af5eabe14443fcc9a8c484b339601465aaa8bff0c
+      sha256: "8cbf350f6d4d2700b190ec0769b9da65dc1163cd8e90545bc2b7e902d3af6324"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.15"
+    version: "0.0.16"
   magic_deeplink:
     dependency: "direct main"
     description:
       name: magic_deeplink
-      sha256: "4aeaf5fbb18d629a0b2f809cb0fac48b374a7ccc751a386a95db765b680e748d"
+      sha256: "9b62bb8c96b82705ac5a3100c0f0072235fa018bb0d063b259c9a62468eec2c1"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.2"
+    version: "0.1.3"
   magic_devtools:
     dependency: "direct main"
     description:
       name: magic_devtools
-      sha256: "26a920f33301a83689ef010096e8bac23bcaa737625ea3506a39942a0248d707"
+      sha256: f84b37768920093f9e56f323e45603cfc752f790365bf16d36329a9fe2375418
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.5"
+    version: "0.0.6"
   magic_notifications:
     dependency: "direct main"
     description:
       name: magic_notifications
-      sha256: add62ae150d2e91e8fdd96ae23120b0f00dbecac34ef6175f4b02e6c2e76aa0d
+      sha256: "033b92b6239b9bc443c9ba7479e131ece03e9f1b23b2517da18fa89763d21abd"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.3"
+    version: "0.3.4"
   magic_payments:
     dependency: transitive
     description:
       name: magic_payments
-      sha256: "65473127ebcad27a25a3b283d37b8aa82d1c6cb872aae17540faf32070273b47"
+      sha256: "344712a777bc51fbbe687e47f332af2a8f1258af06df5ab2c1135fe1e0058a5f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "0.0.4"
   magic_social_auth:
     dependency: "direct main"
     description:
       name: magic_social_auth
-      sha256: "11189045e12f220f7afc5817b039e7fb016e2d740d712a7f96eae3653ff7df60"
+      sha256: "57b225c444a034d0630410557d72924f0b3a16563c173a00d5510aa49ef58fb4"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4"
+    version: "0.0.5"
   magic_starter:
     dependency: "direct main"
     description:
       name: magic_starter
-      sha256: "86afdb01e13fe3528ed3184d5054a361195c08c4db7d4aebe2c52aebdceb5c9c"
+      sha256: "5ead437a91dcb121b0e81bf736072186f761bbc8d60fdda197b0377e846c83a9"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.31"
+    version: "0.0.35"
   matcher:
     dependency: transitive
     description:
