@@ -93,11 +93,18 @@ class _DashboardViewState
   Widget build(BuildContext context) {
     final appName = Config.get('app.name', 'My App') ?? 'My App';
 
-    return WDiv(
-      className: 'w-full max-w-[480px] md:max-w-4xl mx-auto p-4 lg:p-8',
-      child: controller.renderState(
-        (name) => _buildLoaded(appName: appName, greetingName: name),
-        onLoading: _buildSkeleton(),
+    // Its own scroll: magic_starter's app shell stopped scrolling its content
+    // box (a scroll around the shell's nested Navigator broke a page left
+    // under a stacked route), so a page taller than the window scrolls
+    // itself. `primary: false`, as MSPageScaffold does.
+    return SingleChildScrollView(
+      primary: false,
+      child: WDiv(
+        className: 'w-full max-w-[480px] md:max-w-4xl mx-auto p-4 lg:p-8',
+        child: controller.renderState(
+          (name) => _buildLoaded(appName: appName, greetingName: name),
+          onLoading: _buildSkeleton(),
+        ),
       ),
     );
   }
