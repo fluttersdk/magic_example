@@ -13,9 +13,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | Determines whether the package uses UUID primary keys or standard
-    | auto-incrementing integer IDs. When true, all package migrations
-    | use uuid() columns and foreignUuid() references. When false,
-    | standard id() and foreignId() are used instead.
+    | auto-incrementing integer IDs. When true, package migrations use
+    | uuid() columns and foreignUuid() references. When false, standard
+    | id() and foreignId() are used instead. The notifications table keeps
+    | a uuid() id either way, because Laravel's database channel writes one.
     |
     | This is set automatically during installation based on your
     | existing database schema, but can be changed manually.
@@ -43,7 +44,7 @@ return [
         // \FlutterSdk\MagicStarter\Features::socialLogin(),
         // \FlutterSdk\MagicStarter\Features::newsletterSubscription(),
         // \FlutterSdk\MagicStarter\Features::extendedProfile(),
-        // \FlutterSdk\MagicStarter\Features::notifications(),
+        Features::notifications(),
         // \FlutterSdk\MagicStarter\Features::onesignal(),
         // \FlutterSdk\MagicStarter\Features::guestAuth(),
         // \FlutterSdk\MagicStarter\Features::phoneOtp(),
