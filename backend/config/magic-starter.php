@@ -43,7 +43,7 @@ return [
         // \FlutterSdk\MagicStarter\Features::socialLogin(),
         // \FlutterSdk\MagicStarter\Features::newsletterSubscription(),
         // \FlutterSdk\MagicStarter\Features::extendedProfile(),
-        // \FlutterSdk\MagicStarter\Features::notifications(),
+        Features::notifications(),
         // \FlutterSdk\MagicStarter\Features::onesignal(),
         // \FlutterSdk\MagicStarter\Features::guestAuth(),
         // \FlutterSdk\MagicStarter\Features::phoneOtp(),
