@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Notifications\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -56,33 +55,5 @@ class NotificationRoutesTest extends TestCase
     public function test_the_notification_list_refuses_a_guest(): void
     {
         $this->getJson('/api/v1/notifications')->assertUnauthorized();
-    }
-}
-
-/**
- * A notification that goes through Laravel's `database` channel only, which writes the
- * row with a UUID `id` whatever key type the application's own models use.
- */
-class DatabaseOnlyNotification extends Notification
-{
-    /**
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return [
-            'database',
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'title' => 'Deploy finished',
-            'body' => 'Production is on the new build.',
-        ];
     }
 }
