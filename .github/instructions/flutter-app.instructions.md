@@ -20,7 +20,7 @@ Follow the skill's definition rather than inventing a shape here:
 
 - A controller is a `MagicController` resolved through a canonical `static X get instance => Magic.findOrPut(X.new);`, notifying through `refreshUI()` rather than calling `notifyListeners()` directly.
 - A view pairs with it as `MagicStatefulView<XController>` / `MagicStatefulViewState`. Do not pass a controller through a view's constructor; nothing then resets it between logins or tests.
-- A controller holding anything that belongs to the current identity implements `SessionScopedController`. `SessionScopeSync.attach()` (`lib/app/providers/app_service_provider.dart:81`) resets every registered one on login and team switch; `onInit` alone cannot cover this, because it runs once per controller lifetime rather than once per session. Skip it and a team switch leaves the previous tenant's data on screen until the app restarts.
+- A controller holding anything that belongs to the current identity implements magic's `SessionScoped`. `SessionScope.attach()` (`lib/app/providers/app_service_provider.dart`) resets every one in `Magic.controllers` on login and team switch, a repository through `SessionScope.register`; `onInit` alone cannot cover this, because it runs once per controller lifetime rather than once per session. Skip it and a team switch leaves the previous tenant's data on screen until the app restarts.
 - No app shell under `lib/ui/layouts/`. `lib/routes/app.dart:16` already mounts `magic_starter`'s `layout.app` through `MagicRoute.group(layout: ...)`; a second shell competes with it and decays.
 
 ## Routes register in `boot()`, not `register()`
