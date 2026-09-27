@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a4a3e49ac1ec4f0ba7b2c85a7d75984",
+    "content-hash": "50487222ca48432d74c7adef8858fbf9",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -680,16 +680,16 @@
         },
         {
             "name": "fluttersdk/magic-starter-laravel",
-            "version": "0.0.10",
+            "version": "0.0.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fluttersdk/magic-starter-laravel.git",
-                "reference": "a67e895dabb225a735df29182ba24adfb678d98e"
+                "reference": "4f31262cbce069ac13deb1b4de2393afbdd443c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fluttersdk/magic-starter-laravel/zipball/a67e895dabb225a735df29182ba24adfb678d98e",
-                "reference": "a67e895dabb225a735df29182ba24adfb678d98e",
+                "url": "https://api.github.com/repos/fluttersdk/magic-starter-laravel/zipball/4f31262cbce069ac13deb1b4de2393afbdd443c9",
+                "reference": "4f31262cbce069ac13deb1b4de2393afbdd443c9",
                 "shasum": ""
             },
             "require": {
@@ -758,7 +758,7 @@
                 "issues": "https://github.com/fluttersdk/magic-starter-laravel/issues",
                 "source": "https://github.com/fluttersdk/magic-starter-laravel"
             },
-            "time": "2026-09-21T22:43:33+00:00"
+            "time": "2026-09-27T10:15:49+00:00"
         },
         {
             "name": "fruitcake/php-cors",

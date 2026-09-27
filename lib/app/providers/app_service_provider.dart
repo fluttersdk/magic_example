@@ -71,13 +71,14 @@ class AppServiceProvider extends ServiceProvider {
       ],
     );
 
-    // Magic Starter: reset every session-scoped controller (polling,
-    // realtime, cached lists) on login and team switch. Registered last so
-    // the identity contract and navigation above already point at the new
-    // session before SessionScopeSync refetches its data; registering it
-    // earlier would refetch against the previous tenant's resolver. Without
-    // this, magic's Type-keyed singleton controllers keep the previous
-    // tenant's rows on screen after a re-login or team switch.
-    SessionScopeSync.attach();
+    // Reset every session-scoped controller (polling, realtime, cached
+    // lists) on login and team switch. magic owns this since 0.0.22, and
+    // magic_starter keys the identity as `<userId>:<teamId>` so a team switch
+    // counts. Attached last so the identity contract and navigation above
+    // already point at the new session before SessionScope refetches its
+    // data; attaching earlier would refetch against the previous tenant's
+    // resolver. Without this, magic's Type-keyed singleton controllers keep
+    // the previous tenant's rows on screen after a re-login or team switch.
+    SessionScope.attach();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:magic/magic.dart';
-import 'package:magic_starter/magic_starter.dart';
 
 import '../models/user.dart';
 
@@ -16,13 +15,13 @@ import '../models/user.dart';
 /// ### Why a controller for a screen with no mutations
 ///
 /// [DashboardView] greets the CURRENT identity, which makes it session-scoped
-/// whether or not a backend sits behind it. `SessionScopeSync.attach()`
-/// (`app_service_provider.dart:81`) resets every registered
-/// [SessionScopedController] on login and team switch; before this class
+/// whether or not a backend sits behind it. magic's `SessionScope.attach()`
+/// (`app_service_provider.dart`) resets every [SessionScoped] controller
+/// in `Magic.controllers` on login and team switch; before this class
 /// nothing implemented the contract, so that call ran and had nothing to
 /// reset. Without [resetForSession], a team switch would leave the previous
 /// tenant's name on screen until the app restarted (see
-/// [SessionScopedController]'s own docblock for why `onInit` alone cannot
+/// [SessionScoped]'s own docblock for why `onInit` alone cannot
 /// catch this: it runs once per controller lifetime, not once per session).
 ///
 /// ### What "loading" honestly represents here
@@ -44,7 +43,7 @@ import '../models/user.dart';
 /// replaces the body of [load] without touching [onInit] or [resetForSession].
 class DashboardController extends MagicController
     with MagicStateMixin<String>
-    implements SessionScopedController {
+    implements SessionScoped {
   /// The shared instance, resolved once and reused for the app's lifetime.
   static DashboardController get instance =>
       Magic.findOrPut(DashboardController.new);
@@ -72,7 +71,7 @@ class DashboardController extends MagicController
   /// Clears the previous session's greeting and resolves the new one.
   ///
   /// Called on login and team switch, never on logout (see
-  /// [SessionScopedController.resetForSession]'s own contract: a logout only
+  /// [SessionScoped.resetForSession]'s own contract: a logout only
   /// routes to the login screen, which never reads this controller). A plain
   /// [load] would leave the previous name on screen until the refetch
   /// resolves, which is exactly the wrong default across an identity change.
